@@ -1,8 +1,14 @@
 # 多阶段镜像：
 # - `release`：基于通用 EE，安装 k3s collection（应用相关内容）
 # - `dev`：在 release 基础上添加调试/测试工具（用于开发）
-FROM ansible-ee:base AS release
+ARG BASE_IMAGE=ansible-ee-base:latest
+FROM ${BASE_IMAGE} AS release
 
+# 1. Install Python dependencies (if any)
+COPY requirements.txt /tmp/requirements.txt
+RUN /opt/venv/bin/pip install -i ${PIP_MIRROR} --no-cache-dir -r /tmp/requirements.txt
+
+# 2. Install Ansible collections
 COPY requirements.yml /tmp/requirements.yml
 RUN test -s /tmp/requirements.yml || (echo "ERROR: requirements.yml not found or empty" >&2; exit 1) && \
     /opt/venv/bin/ansible-galaxy collection install -r /tmp/requirements.yml

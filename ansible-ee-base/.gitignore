@@ -1,8 +1,0 @@
-# Ignore local test inventory and common files
-inventory/local.yml
-.env
-*.vault
-# Editor / OS
-.vscode/
-*.swp
-.DS_Store
