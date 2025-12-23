@@ -1,9 +1,8 @@
 {
-    "name": "Ansible EE K3s",
+    "name": "Ansible EE Base",
     "build": {
         "dockerfile": "../Dockerfile",
-        "context": "..",
-        "target": "dev"
+        "context": ".."
     },
     "runArgs": [
         "--network=host"
@@ -22,13 +21,9 @@
         }
     },
     "mounts": [
-        "source=/run/containerd/containerd.sock,target=/run/containerd/containerd.sock,type=bind",
-        "source=/run/buildkit/buildkitd.sock,target=/run/buildkit/buildkitd.sock,type=bind",
         "source=/tmp/ssh-agent.sock,target=/ssh-agent,type=bind"
     ],
     "remoteEnv": {
-        "CONTAINERD_ADDRESS": "/run/containerd/containerd.sock",
-        "BUILDKIT_HOST": "unix:///run/buildkit/buildkitd.sock",
         "SSH_AUTH_SOCK": "/ssh-agent"
     },
     "postCreateCommand": "ansible --version",

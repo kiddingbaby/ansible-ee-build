@@ -1,0 +1,8 @@
+# Ignore resources (large files)
+resources/
+inventory/local.yml
+.env
+*.vault
+.vscode/
+*.swp
+.DS_Store
