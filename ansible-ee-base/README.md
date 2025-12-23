@@ -6,7 +6,7 @@
 
 - **极简体积**：基于 Debian Slim，多阶段构建，仅包含运行时依赖。
 - **安全加固**：默认非 Root 用户 (`ansible`) 运行，遵循最小权限原则。
-- **构建优化**：集成 BuildKit 缓存，支持 `bindep.txt` 系统依赖管理。
+- **构建优化**：集成 BuildKit 缓存。
 - **标准兼容**：预装 Ansible Core 2.17+ 和 Ansible Runner 2.4+。
 
 ## 快速开始
@@ -86,7 +86,6 @@ CMD ["ansible-runner", "run", "/runner", "-p", "site.yml"]
 
 - `Dockerfile`: 核心构建文件。
 - `ansible.cfg`: 针对容器环境优化的 Ansible 配置。
-- `bindep.txt`: 基础系统依赖列表。
 - `tests/`: 冒烟测试与验证脚本。
 
 ## CI/CD 集成

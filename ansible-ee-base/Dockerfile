@@ -29,11 +29,11 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     && rm -rf /var/lib/apt/lists/*
 
 
-COPY requirements.txt /tmp/requirements.txt
-
 # 创建虚拟环境并升级打包工具
 RUN python -m venv /opt/venv \
     && /opt/venv/bin/pip install -i ${PIP_MIRROR} --upgrade pip setuptools wheel
+
+COPY requirements.txt /tmp/requirements.txt
 
 # 使用 BuildKit cache 加速 pip 安装（本地构建时请启用 DOCKER_BUILDKIT=1）
 RUN --mount=type=cache,target=/root/.cache/pip /opt/venv/bin/pip install -i ${PIP_MIRROR} --upgrade-strategy=only-if-needed -r /tmp/requirements.txt \
@@ -63,19 +63,17 @@ ENV ANSIBLE_CONFIG=/ansible/ansible.cfg \
     LC_ALL=C.UTF-8 \
     DEBIAN_FRONTEND=noninteractive
 
-# 将 bindep.txt 中声明的运行时系统包安装到发布镜像
-COPY bindep.txt /tmp/bindep.txt
-
-# 仅安装运行时必须的系统包（合并 openssh-client/sshpass 与 bindep 依赖）
+# 仅安装运行时必须的系统包
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     sed -i "s|deb.debian.org|${DEBIAN_MIRROR}|g; s|security.debian.org|${DEBIAN_MIRROR}|g" /etc/apt/sources.list.d/debian.sources \
     && apt-get update \
-    && packages="$(sed 's/#.*//' /tmp/bindep.txt | tr '\n' ' ')" \
     && apt-get install -y --no-install-recommends \
     openssh-client \
     sshpass \
-    $packages \
-    && rm -f /tmp/bindep.txt \
+    git \
+    iputils-ping \
+    curl \
+    vim-tiny \
     && rm -rf /var/lib/apt/lists/*
 
 # 复制虚拟环境与 Ansible 集合

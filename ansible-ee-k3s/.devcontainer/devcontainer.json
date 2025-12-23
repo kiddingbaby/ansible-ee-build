@@ -1,7 +1,7 @@
 {
-    "name": "Ansible EE Dev",
+    "name": "Ansible EE K3s",
     "build": {
-        "dockerfile": "../ansible-ee-k3s/Dockerfile",
+        "dockerfile": "../Dockerfile",
         "context": "..",
         "target": "dev"
     },
@@ -32,5 +32,5 @@
         "SSH_AUTH_SOCK": "/ssh-agent"
     },
     "postCreateCommand": "ansible --version",
-    "remoteUser": "root"
+    "remoteUser": "ansible"
 }

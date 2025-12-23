@@ -1,31 +1,31 @@
 {
-  "name": "Ansible EE",
-  "build": {
-    "dockerfile": "../Dockerfile",
-    "context": ".."
-  },
-  "runArgs": [
-    "--network=host"
-  ],
-  "customizations": {
-    "vscode": {
-      "extensions": [
-        "redhat.ansible",
-        "ms-python.python",
-        "ms-azuretools.vscode-docker"
-      ],
-      "settings": {
-        "python.defaultInterpreterPath": "/opt/venv/bin/python",
-        "ansible.python.interpreterPath": "/opt/venv/bin/python"
-      }
-    }
-  },
-  "mounts": [
-    "source=/tmp/ssh-agent.sock,target=/ssh-agent,type=bind"
-  ],
-  "remoteEnv": {
-    "SSH_AUTH_SOCK": "/ssh-agent"
-  },
-  "postCreateCommand": "ansible --version",
-  "remoteUser": "root"
+    "name": "Ansible EE Base",
+    "build": {
+        "dockerfile": "../Dockerfile",
+        "context": ".."
+    },
+    "runArgs": [
+        "--network=host"
+    ],
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "redhat.ansible",
+                "ms-python.python",
+                "ms-azuretools.vscode-docker"
+            ],
+            "settings": {
+                "python.defaultInterpreterPath": "/opt/venv/bin/python",
+                "ansible.python.interpreterPath": "/opt/venv/bin/python"
+            }
+        }
+    },
+    "mounts": [
+        "source=/tmp/ssh-agent.sock,target=/ssh-agent,type=bind"
+    ],
+    "remoteEnv": {
+        "SSH_AUTH_SOCK": "/ssh-agent"
+    },
+    "postCreateCommand": "ansible --version",
+    "remoteUser": "ansible"
 }

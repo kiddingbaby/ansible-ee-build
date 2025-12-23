@@ -1,0 +1,57 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Virtual Environments
+venv/
+.venv/
+env/
+.env
+
+# Ansible
+*.retry
+*.log
+.ansible/
+
+# Ansible Runner Output
+artifacts/
+runner/artifacts/
+runner/inventory/
+runner/project/
+!runner/project/site.yml
+!runner/project/README.md
+
+# IDE / Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# OS generated files
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+
+# Local configuration & Secrets
+inventory/local.yml
+*.vault
+secrets.yml
+*.pem
+*.key
+
+# Docker
+.docker/
+
+# Temporary / Cache
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/

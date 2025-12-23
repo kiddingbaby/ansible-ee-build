@@ -35,13 +35,13 @@ help:
 	@echo "  make build-k3s-dev DRY_RUN=true"
 
 build-base:
-	$(DOCKER_BUILD) -f $(BASE_DOCKERFILE) -t $(BASE_TAG) .
+	$(DOCKER_BUILD) -f $(BASE_DOCKERFILE) -t $(BASE_TAG) ansible-ee-base/
 
 build-k3s-release: build-base
-	$(DOCKER_BUILD) -f $(K3S_DOCKERFILE) --target release -t $(K3S_RELEASE_TAG) .
+	$(DOCKER_BUILD) -f $(K3S_DOCKERFILE) --target release -t $(K3S_RELEASE_TAG) ansible-ee-k3s/
 
 build-k3s-dev: build-k3s-release
-	$(DOCKER_BUILD) -f $(K3S_DOCKERFILE) --target dev -t $(K3S_DEV_TAG) .
+	$(DOCKER_BUILD) -f $(K3S_DOCKERFILE) --target dev -t $(K3S_DEV_TAG) ansible-ee-k3s/
 
 build-all: build-base build-k3s-release
 

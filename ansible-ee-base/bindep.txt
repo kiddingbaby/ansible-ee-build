@@ -1,8 +1,0 @@
-# System packages required at runtime (bindep format)
-# Note: openssh-client and sshpass are already installed by the base Dockerfile
-
-# Common utilities for Ansible
-git             # Required for git module and galaxy installs
-iputils-ping    # Useful for network debugging
-curl            # Useful for checking web endpoints or downloading files
-vim-tiny        # Useful for editing files during debugging

@@ -3,8 +3,8 @@
 # - `dev`：在 release 基础上添加调试/测试工具（用于开发）
 FROM ansible-ee:base AS release
 
-COPY ansible-ee-k3s/requirements.yml /tmp/requirements.yml
-RUN test -s /tmp/requirements.yml || (echo "ERROR: ansible-ee-k3s/requirements.yml not found or empty" >&2; exit 1) && \
+COPY requirements.yml /tmp/requirements.yml
+RUN test -s /tmp/requirements.yml || (echo "ERROR: requirements.yml not found or empty" >&2; exit 1) && \
     /opt/venv/bin/ansible-galaxy collection install -r /tmp/requirements.yml
 
 # dev 阶段：为开发/调试添加工具（仅用于本地开发镜像）
