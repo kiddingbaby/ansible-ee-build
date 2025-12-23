@@ -1,0 +1,39 @@
+---
+# run-k3s-upgrade.yml — wrapper to run upstream k3s upgrade playbook with prechecks
+
+- name: Preflight checks for K3s upgrade
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: Set default k3s_release_version if not defined
+      set_fact:
+        k3s_release_version: "{{ k3s_version }}"
+      when: k3s_release_version is not defined and k3s_version is defined
+      run_once: true
+
+    - name: Ensure server group exists
+      assert:
+        that:
+          - "groups['server'] is defined"
+          - "groups['server'] | length > 0"
+        fail_msg: "No hosts defined in 'server' group; check inventory."
+
+    - name: Set k3s_release_version from first server inventory if not defined
+      set_fact:
+        k3s_release_version: "{{ hostvars[groups['server'][0]]['k3s_release_version'] if ('k3s_release_version' in hostvars[groups['server'][0]]) else ( hostvars[groups['server'][0]]['k3s_version'] if ('k3s_version' in hostvars[groups['server'][0]]) else (k3s_release_version if (k3s_release_version is defined) else omit) ) }}"
+      when: k3s_release_version is not defined and groups['server'] is defined and groups['server'] | length > 0
+      run_once: true
+
+    - name: Ensure k3s version to upgrade to is provided
+      assert:
+        that:
+          - "k3s_release_version is defined"
+        fail_msg: "k3s_release_version (or k3s_version) must be set to target version."
+
+    - name: Warn if token is placeholder
+      debug:
+        msg: "token looks like placeholder; ensure you pass a real token via --extra-vars or vault"
+      when: token is defined and token == 'changeme!'
+
+- import_playbook: k3s.orchestration.upgrade

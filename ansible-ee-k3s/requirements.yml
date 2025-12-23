@@ -1,0 +1,6 @@
+---
+# 示例 requirements.yml：在构建 ansible-ee-k3s 时会被使用
+collections:
+  - name: k3s-io.k3s-ansible
+    source: https://github.com/k3s-io/k3s-ansible.git
+    version: main

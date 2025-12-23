@@ -1,0 +1,32 @@
+---
+# run-k3s-site.yml — wrapper to run upstream k3s site playbook with prechecks
+
+- name: Preflight checks for K3s site/run
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: Set fallback k3s_release_version from k3s_version if not provided
+      set_fact:
+        k3s_release_version: "{{ k3s_version }}"
+      when: k3s_release_version is not defined and k3s_version is defined
+
+    - name: Ensure server group exists
+      assert:
+        that:
+          - "groups['server'] is defined"
+          - "groups['server'] | length > 0"
+        fail_msg: "No hosts defined in 'server' group; check inventory."
+
+    - name: Report detected k3s version variables (no hard fail)
+      debug:
+        msg:
+          - "k3s_release_version={{ k3s_release_version | default('not-set') }}"
+          - "k3s_version_group={{ (hostvars[groups['server'][0]].get('k3s_version','not-set') if (groups['server'] is defined and groups['server'] | length > 0) else (vars['k3s_version'] | default('not-set'))) }}"
+
+    - name: Warn if token is placeholder
+      debug:
+        msg: "token looks like placeholder; ensure you pass a real token via --extra-vars or vault"
+      when: token is defined and token == 'changeme!'
+
+- import_playbook: k3s.orchestration.site
