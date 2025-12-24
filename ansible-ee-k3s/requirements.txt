@@ -1,2 +1,1 @@
-# Add Python dependencies for your collections here
 kubernetes>=24.2.0
