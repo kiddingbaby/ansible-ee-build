@@ -18,7 +18,6 @@ variable "PLATFORMS" {
 # Common definitions
 ############################################################
 
-# 所有 EE 镜像统一规则
 target "_ee_common" {
   platforms = split(",", PLATFORMS)
 
@@ -28,7 +27,7 @@ target "_ee_common" {
 }
 
 ############################################################
-# Base EE (platform layer)
+# Base EE
 ############################################################
 
 target "ee-base" {
@@ -43,7 +42,7 @@ target "ee-base" {
 }
 
 ############################################################
-# K3s EE (application layer)
+# K3s EE (依赖 base)
 ############################################################
 
 target "ee-k3s" {
@@ -52,8 +51,10 @@ target "ee-k3s" {
   dockerfile = "Dockerfile"
   target     = "release"
 
+  depends_on = ["ee-base"]
+
   args = {
-    BASE_IMAGE = "${REGISTRY}/ansible-ee-base:latest"
+    BASE_IMAGE = "${REGISTRY}/ansible-ee-base:${VERSION}"
   }
 
   tags = [
