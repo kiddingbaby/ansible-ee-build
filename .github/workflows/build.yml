@@ -40,9 +40,11 @@ jobs:
             base:
               - 'ansible-ee-base/**'
               - 'docker-bake.hcl'
+              - '.github/workflows/**'
             k3s:
               - 'ansible-ee-k3s/**'
               - 'docker-bake.hcl'
+              - '.github/workflows/**'
             version:
               - 'VERSION'
 
@@ -52,7 +54,7 @@ jobs:
   build-base:
     name: Build ansible-ee-base
     needs: changes
-    if: needs.changes.outputs.base == 'true' || needs.changes.outputs.version == 'true' || (github.event_name == 'workflow_dispatch' && github.event.inputs.force == 'true')
+    if: needs.changes.outputs.base == 'true' || needs.changes.outputs.version == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -102,7 +104,7 @@ jobs:
   build-k3s:
     name: Build ansible-ee-k3s
     needs: [changes, build-base]
-    if: needs.changes.outputs.k3s == 'true' || needs.changes.outputs.version == 'true' || (github.event_name == 'workflow_dispatch' && github.event.inputs.force == 'true')
+    if: needs.changes.outputs.k3s == 'true' || needs.changes.outputs.version == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: read
