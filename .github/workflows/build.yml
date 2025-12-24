@@ -78,7 +78,7 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Build and push base
-        uses: docker/bake-action@v4
+        uses: docker/bake-action@v5
         with:
           files: ./docker-bake.hcl
           targets: base
@@ -127,7 +127,7 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Build and push k3s
-        uses: docker/bake-action@v4
+        uses: docker/bake-action@v5
         with:
           files: ./docker-bake.hcl
           targets: k3s
