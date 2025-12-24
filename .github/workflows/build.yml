@@ -92,8 +92,9 @@ jobs:
           set: |
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
-            VERSION=${{ steps.read_version.outputs.version }}
-            REGISTRY=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        env:
+          VERSION: ${{ steps.read_version.outputs.version }}
+          REGISTRY: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
   # ============================================================
   # 3. Build k3s image
@@ -141,5 +142,6 @@ jobs:
           set: |
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
-            VERSION=${{ steps.read_version.outputs.version }}
-            REGISTRY=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        env:
+          VERSION: ${{ steps.read_version.outputs.version }}
+          REGISTRY: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
