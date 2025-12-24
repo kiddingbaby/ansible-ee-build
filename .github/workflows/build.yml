@@ -6,6 +6,12 @@ on:
     tags: ["v*"]
   pull_request:
     branches: ["master", "main"]
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Force build regardless of path filter"
+        required: false
+        default: "false"
 
 env:
   REGISTRY: ghcr.io
@@ -20,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       base: ${{ steps.filter.outputs.base }}
-      k3s:  ${{ steps.filter.outputs.k3s }}
+      k3s: ${{ steps.filter.outputs.k3s }}
       version: ${{ steps.filter.outputs.version }}
     steps:
       - name: Checkout
@@ -46,7 +52,7 @@ jobs:
   build-base:
     name: Build ansible-ee-base
     needs: changes
-    if: needs.changes.outputs.base == 'true' || needs.changes.outputs.version == 'true'
+    if: needs.changes.outputs.base == 'true' || needs.changes.outputs.version == 'true' || (github.event_name == 'workflow_dispatch' && github.event.inputs.force == 'true')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -95,7 +101,7 @@ jobs:
   build-k3s:
     name: Build ansible-ee-k3s
     needs: [changes, build-base]
-    if: needs.changes.outputs.k3s == 'true' || needs.changes.outputs.version == 'true'
+    if: needs.changes.outputs.k3s == 'true' || needs.changes.outputs.version == 'true' || (github.event_name == 'workflow_dispatch' && github.event.inputs.force == 'true')
     runs-on: ubuntu-latest
     permissions:
       contents: read
