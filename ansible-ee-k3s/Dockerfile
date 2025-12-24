@@ -4,14 +4,11 @@
 ARG BASE_IMAGE=ansible-ee-base:latest
 FROM ${BASE_IMAGE} AS release
 
-# 1. Install Python dependencies (if any)
 COPY requirements.txt /tmp/requirements.txt
 RUN /opt/venv/bin/pip install -i ${PIP_MIRROR} --no-cache-dir -r /tmp/requirements.txt
 
-# 2. Install Ansible collections
 COPY requirements.yml /tmp/requirements.yml
-RUN test -s /tmp/requirements.yml || (echo "ERROR: requirements.yml not found or empty" >&2; exit 1) && \
-    /opt/venv/bin/ansible-galaxy collection install -r /tmp/requirements.yml
+RUN /opt/venv/bin/ansible-galaxy collection install -r /tmp/requirements.yml
 
 # dev 阶段：为开发/调试添加工具（仅用于本地开发镜像）
 FROM release AS dev
@@ -30,15 +27,5 @@ RUN sed -i "s|deb.debian.org|${DEBIAN_MIRROR}|g; s|security.debian.org|${DEBIAN_
     iputils-ping \
     tree \
     && rm -rf /var/lib/apt/lists/*
-
-# 在开发镜像中安装 nerdctl，以便在容器内测试 containerd/nerdctl 场景
-ARG NERDCTL_VERSION=1.7.6
-RUN curl -L -o /tmp/nerdctl.tar.gz "https://github.com/containerd/nerdctl/releases/download/v${NERDCTL_VERSION}/nerdctl-${NERDCTL_VERSION}-linux-amd64.tar.gz" \
-    && tar -C /usr/local/bin -xzf /tmp/nerdctl.tar.gz \
-    && rm /tmp/nerdctl.tar.gz \
-    && ln -s /usr/local/bin/nerdctl /usr/local/bin/docker
-
-# 安装开发/测试相关 Python 包
-RUN pip install -i ${PIP_MIRROR} --no-cache-dir ansible-lint
 
 CMD ["/bin/bash"]
