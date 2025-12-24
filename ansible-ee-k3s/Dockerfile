@@ -5,7 +5,7 @@ ARG BASE_IMAGE=ansible-ee-base:latest
 FROM ${BASE_IMAGE} AS release
 
 COPY requirements.txt /tmp/requirements.txt
-RUN /opt/venv/bin/pip install -i ${PIP_MIRROR} --no-cache-dir -r /tmp/requirements.txt
+RUN /opt/venv/bin/pip install --no-cache-dir -i ${PIP_MIRROR} -r /tmp/requirements.txt
 
 COPY requirements.yml /tmp/requirements.yml
 RUN /opt/venv/bin/ansible-galaxy collection install -r /tmp/requirements.yml
