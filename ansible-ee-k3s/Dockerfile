@@ -22,10 +22,8 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 
 # ---- Ansible collections ----
 COPY requirements.yml /tmp/requirements.yml
-RUN --mount=type=cache,target=/usr/share/ansible/collections \
-    /opt/venv/bin/ansible-galaxy collection install \
+RUN /opt/venv/bin/ansible-galaxy collection install \
       -r /tmp/requirements.yml \
-      --collections-path /usr/share/ansible/collections \
       --server "${ANSIBLE_GALAXY_SERVER}"
 
 ############################
