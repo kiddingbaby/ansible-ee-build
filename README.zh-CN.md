@@ -1,4 +1,3 @@
-
 # ansible-ee-build
 
 [English](./README.md) | [中文文档](./README.zh-CN.md)
@@ -15,6 +14,13 @@
 
 - `ansible-ee-base`：运行时基础镜像（非 root 用户，预置 venv 与 collections）
 - `ansible-ee-k3s`：基于 base 扩展，集成 K3s/Kubernetes 运维工具
+
+## 构建目标
+
+- `default`：构建 `base` + `k3s`
+- `base`：仅构建基础镜像
+- `k3s`：构建 release 镜像
+- `k3s-dev`：构建 dev/debug 镜像
 
 ## 快速开始
 
@@ -42,14 +48,34 @@ make build
 make build TARGET=k3s PUSH=true
 ```
 
-**说明**：设置 `PUSH=true` 会通过 `docker buildx bake --push` 推送镜像到仓库。默认情况（`PUSH=false`）只在本地加载镜像。
+**说明**：
+
+- `PUSH=true` 会使用 `docker buildx bake --push` 推送。
+- `PUSH=false` 会使用 `docker buildx bake --load` 仅加载到本地。
+- `docker-bake.hcl` 默认 `PLATFORMS=linux/amd64,linux/arm64`。使用 `--load` 时需要设置为单一平台，例如：
+
+```bash
+PLATFORMS=linux/amd64 make build TARGET=base
+```
+
+## 配置
+
+- 版本：由仓库根目录 `VERSION` 文件驱动。
+- 仓库命名空间：默认 `REGISTRY=$(REGISTRY_HOST)/$(OWNER)`。
+
+覆盖示例：
+
+```bash
+make build TARGET=base REGISTRY_HOST=registry.example.com
+make build TARGET=base REGISTRY=registry.example.com/team
+```
 
 ## 调试
 
 交互式 shell：
 
 ```bash
-docker run --rm -it ghcr.io/kiddingbaby/ansible-ee-build/ansible-ee-base:1.0.0 bash
+docker run --rm -it ghcr.io/kiddingbaby/ansible-ee-base:1.0.0 bash
 ```
 
 ## CI/CD

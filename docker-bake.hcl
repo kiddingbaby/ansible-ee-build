@@ -1,25 +1,43 @@
 ############################################################
-# Variables
+# docker-bake.hcl - Enterprise-grade, simplified
 ############################################################
 
-variable "VERSION" {}
-variable "REGISTRY" {}
+# ---------------------------
+# Variables
+# ---------------------------
+variable "VERSION" {
+  default = "1.0.0"
+}
+
+variable "REGISTRY" {
+  default = "ghcr.io/kiddingbaby"
+}
+
 variable "PLATFORMS" {
   default = "linux/amd64,linux/arm64"
 }
 
-############################################################
-# Common
-############################################################
-
+# ---------------------------
+# Common target
+# ---------------------------
 target "_common" {
   platforms = split(",", PLATFORMS)
+
+  labels = {
+    "org.opencontainers.image.source"   = "https://github.com/kiddingbaby/ansible-ee-build"
+    "org.opencontainers.image.version"  = "${VERSION}"
+    "org.opencontainers.image.licenses" = "MIT"
+  }
+
+  args = {
+    VERSION  = "${VERSION}"
+    REGISTRY = "${REGISTRY}"
+  }
 }
 
-############################################################
-# Base
-############################################################
-
+# ---------------------------
+# Base target
+# ---------------------------
 target "base" {
   inherits   = ["_common"]
   context    = "ansible-ee-base"
@@ -30,16 +48,14 @@ target "base" {
   ]
 }
 
-############################################################
-# K3s (depends on base)
-############################################################
-
+# ---------------------------
+# K3s release target
+# ---------------------------
 target "k3s" {
   inherits   = ["_common"]
   context    = "ansible-ee-k3s"
   dockerfile = "Dockerfile"
   target     = "release"
-
   depends_on = ["base"]
 
   args = {
@@ -51,10 +67,28 @@ target "k3s" {
   ]
 }
 
-############################################################
-# Groups
-############################################################
+# ---------------------------
+# K3s dev target (optional, for local dev/debug)
+# ---------------------------
+target "k3s-dev" {
+  inherits   = ["_common"]
+  context    = "ansible-ee-k3s"
+  dockerfile = "Dockerfile"
+  target     = "dev"
+  depends_on = ["base"]
 
+  args = {
+    BASE_IMAGE = "${REGISTRY}/ansible-ee-base:${VERSION}"
+  }
+
+  tags = [
+    "${REGISTRY}/ansible-ee-k3s-dev:${VERSION}",
+  ]
+}
+
+# ---------------------------
+# Default group (full release build)
+# ---------------------------
 group "default" {
   targets = ["base", "k3s"]
 }
