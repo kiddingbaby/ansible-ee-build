@@ -10,6 +10,8 @@ ARG ANSIBLE_GALAXY_SERVER=https://galaxy.ansible.com
 
 WORKDIR /runner
 
+USER root
+
 # ---- Python deps ----
 COPY requirements.txt /tmp/requirements.txt
 RUN --mount=type=cache,target=/root/.cache/pip \
@@ -32,8 +34,6 @@ RUN --mount=type=cache,target=/usr/share/ansible/collections \
 FROM release AS dev
 
 ARG DEBIAN_MIRROR=mirrors.tuna.tsinghua.edu.cn
-
-USER root
 
 # Debian 12 使用 debian.sources
 RUN sed -i "s|http://deb.debian.org|https://${DEBIAN_MIRROR}|g; \
