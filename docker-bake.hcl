@@ -7,9 +7,6 @@ variable "REGISTRY" {}
 variable "PLATFORMS" {
   default = "linux/amd64,linux/arm64"
 }
-variable "PUSH" {
-  default = "false"
-}
 
 ############################################################
 # Common
@@ -17,10 +14,6 @@ variable "PUSH" {
 
 target "_common" {
   platforms = split(",", PLATFORMS)
-
-  output = PUSH == "true"
-    ? ["type=registry"]
-    : ["type=docker"]
 }
 
 ############################################################

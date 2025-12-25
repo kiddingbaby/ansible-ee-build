@@ -36,11 +36,13 @@ make build TARGET=k3s
 make build
 ```
 
-推送（需登录 `ghcr.io` 且 PAT 包含 `write:packages`）：
+推送到仓库（需登录 `ghcr.io` 且 PAT 包含 `write:packages`）：
 
 ```bash
 make build TARGET=k3s PUSH=true
 ```
+
+**说明**：设置 `PUSH=true` 会通过 `docker buildx bake --push` 推送镜像到仓库。默认情况（`PUSH=false`）只在本地加载镜像。
 
 ## 调试
 

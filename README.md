@@ -37,11 +37,13 @@ Build all:
 make build
 ```
 
-Push (requires login to `ghcr.io` with a PAT that includes `write:packages`):
+Push to registry (requires login to `ghcr.io` with a PAT that includes `write:packages`):
 
 ```bash
 make build TARGET=k3s PUSH=true
 ```
+
+**Note**: Set `PUSH=true` to push images to the registry via `docker buildx bake --push`. By default (`PUSH=false`), images are only loaded locally.
 
 ## Debug
 
