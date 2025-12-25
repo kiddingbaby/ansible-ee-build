@@ -5,7 +5,6 @@
 ## 目录结构
 
 - `project/site.yml`: 一个简单的 "Hello World" Playbook。
-- `inventory/`: 本地测试用的 Inventory。
 
 ## 如何运行测试
 
@@ -13,9 +12,10 @@
 
 ```bash
 # 在 ansible-ee-base 根目录下执行
+VERSION=1.0.0
 docker run --rm \
   -v $(pwd)/tests/smoke-test/project:/runner/project \
-  ansible-ee-base:latest
+  ansible-ee-base:${VERSION}
 ```
 
 如果输出包含 `"msg": "Hello from ansible-runner template"`，则说明镜像功能正常。

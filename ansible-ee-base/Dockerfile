@@ -1,6 +1,8 @@
-# syntax=docker/dockerfile:1
+# syntax=docker/dockerfile:1.7
 
-### Builder stage
+############################
+# Builder stage
+############################
 FROM python:3.11.14-slim-bookworm AS builder
 
 ARG http_proxy
@@ -38,7 +40,9 @@ RUN --mount=type=cache,target=/root/.cache/pip /opt/venv/bin/pip install -i "${P
 
 RUN mkdir -p /usr/share/ansible/collections || true
 
-### Runtime stage
+############################
+# Release stage
+############################
 FROM python:3.11.14-slim-bookworm AS release
 
 LABEL maintainer="HomeLab User" \
@@ -73,31 +77,22 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     tini \
     && rm -rf /var/lib/apt/lists/*
 
-# 复制虚拟环境与 Ansible 集合
 COPY --from=builder /opt/venv /opt/venv
 COPY --from=builder /usr/share/ansible/collections /usr/share/ansible/collections
 
 WORKDIR /ansible
 COPY ansible.cfg /ansible/ansible.cfg
 
-# Create runner directory for mount point
 RUN mkdir -p /runner
 
-# 创建非 root 用户并赋予 venv 与 collections 所有权
 RUN useradd -m -s /bin/bash ansible \
     && chown -R ansible:ansible /opt/venv /ansible /usr/share/ansible /runner
 
 ENV ANSIBLE_COLLECTIONS_PATHS=/usr/share/ansible/collections
 
-# Use tini as init to handle signals correctly in container environments
+# 使用 tini 处理信号，防止容器孤儿进程
 ENTRYPOINT ["/usr/bin/tini", "--"]
 
 USER ansible
 
-# 默认运行命令：执行 ansible-runner
-CMD ["ansible-runner", "run", "/runner", "-p", "site.yml"]
-
-# Optional healthcheck (usually not necessary for short-lived ansible-runner containers)
-# Uncomment and adjust if your deployment expects a long-running service:
-# HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
-#   CMD /opt/venv/bin/ansible-runner --version >/dev/null 2>&1 || exit 1
+CMD ["ansible-runner", "run", "/runner"]

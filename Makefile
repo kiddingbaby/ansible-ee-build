@@ -20,8 +20,8 @@ build:
 	$(DOCKER) buildx bake \
 		-f docker-bake.hcl \
 		$(TARGET) \
-		--set *.args.VERSION=$(VERSION) \
 		--set *.args.REGISTRY=$(REGISTRY) \
+		--set *.args.VERSION=$(VERSION) \
 		$(PUSH_FLAG)
 
 .PHONY: clean

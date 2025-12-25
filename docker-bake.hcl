@@ -68,25 +68,6 @@ target "k3s" {
 }
 
 # ---------------------------
-# K3s dev target (optional, for local dev/debug)
-# ---------------------------
-target "k3s-dev" {
-  inherits   = ["_common"]
-  context    = "ansible-ee-k3s"
-  dockerfile = "Dockerfile"
-  target     = "dev"
-  depends_on = ["base"]
-
-  args = {
-    BASE_IMAGE = "${REGISTRY}/ansible-ee-base:${VERSION}"
-  }
-
-  tags = [
-    "${REGISTRY}/ansible-ee-k3s-dev:${VERSION}",
-  ]
-}
-
-# ---------------------------
 # Default group (full release build)
 # ---------------------------
 group "default" {
