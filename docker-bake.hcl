@@ -59,11 +59,11 @@ target "k3s" {
   depends_on = ["base"]
 
   args = {
-    BASE_IMAGE = "${REGISTRY}/ansible-base:${VERSION}"
+    BASE_IMAGE = "${REGISTRY}/ansible-ee-base:${VERSION}"
   }
 
   tags = [
-    "${REGISTRY}/ansible-k3s:${VERSION}",
+    "${REGISTRY}/ansible-ee-k3s:${VERSION}",
   ]
 }
 
@@ -78,11 +78,11 @@ target "k3s-dev" {
   depends_on = ["base"]
 
   args = {
-    BASE_IMAGE = "${REGISTRY}/ansible-base:${VERSION}"
+    BASE_IMAGE = "${REGISTRY}/ansible-ee-base:${VERSION}"
   }
 
   tags = [
-    "${REGISTRY}/ansible-k3s-dev:${VERSION}",
+    "${REGISTRY}/ansible-ee-k3s-dev:${VERSION}",
   ]
 }
 

@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=${REGISTRY}/ansible-base:${VERSION}
+ARG BASE_IMAGE="${REGISTRY}/ansible-ee-base:${VERSION}"
 
 ############################
 # release stage
