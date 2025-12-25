@@ -1,15 +1,27 @@
-# Docker build context exclusions
+# Source control
 .git
 .gitignore
-node_modules
+
+# Python / Build artifacts
 .venv
 venv/
 __pycache__
 *.pyc
 *.pyo
 *.pyd
-.vscode
 dist
 build
 *.tar
 *.tgz
+
+# Node / JS
+node_modules
+
+# IDE / editor
+.vscode/
+*.swp
+.DS_Store
+
+# Local / sensitive files
+.env
+*.vault

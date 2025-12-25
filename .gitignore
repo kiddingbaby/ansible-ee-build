@@ -41,7 +41,6 @@ Thumbs.db
 ehthumbs.db
 
 # Local configuration & Secrets
-inventory/local.yml
 *.vault
 secrets.yml
 *.pem
@@ -53,7 +52,7 @@ secrets.yml
 *.tar.zst
 
 # Large Resources
-ansible-ee-k3s/resources/
+ansible-ee-k3s/resources/**
 .docker/
 
 # Temporary / Cache
@@ -61,5 +60,3 @@ ansible-ee-k3s/resources/
 .coverage
 htmlcov/
 .mypy_cache/
-
-resources/ansible-ee-k3s/
