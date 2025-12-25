@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-# 阶段1：构建（包含构建依赖并安装 Python 依赖）
+### Builder stage
 FROM python:3.11.14-slim-bookworm AS builder
 
 ARG http_proxy
@@ -14,7 +14,6 @@ ENV HTTP_PROXY=$http_proxy \
     PYTHONUNBUFFERED=1 \
     DEBIAN_FRONTEND=noninteractive
 
-# 使用清华镜像源并安装构建依赖（合并为单个 RUN，减少层）
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     sed -i "s|deb.debian.org|${DEBIAN_MIRROR}|g; s|security.debian.org|${DEBIAN_MIRROR}|g" /etc/apt/sources.list.d/debian.sources \
     && apt-get update \
@@ -28,21 +27,18 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     unzip \
     && rm -rf /var/lib/apt/lists/*
 
-
-# 创建虚拟环境并升级打包工具
 RUN python -m venv /opt/venv \
     && /opt/venv/bin/pip install -i "${PIP_MIRROR}" --upgrade pip setuptools wheel
 
 COPY requirements.txt /tmp/requirements.txt
 
-# 使用 BuildKit cache 加速 pip 安装（本地构建时请启用 DOCKER_BUILDKIT=1）
+# BuildKit cache 加速
 RUN --mount=type=cache,target=/root/.cache/pip /opt/venv/bin/pip install -i "${PIP_MIRROR}" --upgrade-strategy=only-if-needed -r /tmp/requirements.txt \
     && rm -f /tmp/requirements.txt
 
-# Ensure collections dir exists even if no collections were installed
 RUN mkdir -p /usr/share/ansible/collections || true
 
-# 阶段2：发布镜像（只包含运行时依赖与虚拟环境）
+### Runtime stage
 FROM python:3.11.14-slim-bookworm AS release
 
 LABEL maintainer="HomeLab User" \
@@ -63,19 +59,18 @@ ENV ANSIBLE_CONFIG=/ansible/ansible.cfg \
     LC_ALL=C.UTF-8 \
     DEBIAN_FRONTEND=noninteractive
 
-# 仅安装运行时必须的系统包
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     sed -i "s|deb.debian.org|${DEBIAN_MIRROR}|g; s|security.debian.org|${DEBIAN_MIRROR}|g" /etc/apt/sources.list.d/debian.sources \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
     openssh-client \
     sshpass \
-    git \
     iputils-ping \
     curl \
     vim-tiny \
     gnupg \
     gpg-agent \
+    tini \
     && rm -rf /var/lib/apt/lists/*
 
 # 复制虚拟环境与 Ansible 集合
@@ -94,7 +89,15 @@ RUN useradd -m -s /bin/bash ansible \
 
 ENV ANSIBLE_COLLECTIONS_PATHS=/usr/share/ansible/collections
 
+# Use tini as init to handle signals correctly in container environments
+ENTRYPOINT ["/usr/bin/tini", "--"]
+
 USER ansible
 
 # 默认运行命令：执行 ansible-runner
 CMD ["ansible-runner", "run", "/runner", "-p", "site.yml"]
+
+# Optional healthcheck (usually not necessary for short-lived ansible-runner containers)
+# Uncomment and adjust if your deployment expects a long-running service:
+# HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
+#   CMD /opt/venv/bin/ansible-runner --version >/dev/null 2>&1 || exit 1
