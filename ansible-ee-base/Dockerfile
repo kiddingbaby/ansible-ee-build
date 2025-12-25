@@ -31,12 +31,12 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 
 # 创建虚拟环境并升级打包工具
 RUN python -m venv /opt/venv \
-    && /opt/venv/bin/pip install -i ${PIP_MIRROR} --upgrade pip setuptools wheel
+    && /opt/venv/bin/pip install -i "${PIP_MIRROR}" --upgrade pip setuptools wheel
 
 COPY requirements.txt /tmp/requirements.txt
 
 # 使用 BuildKit cache 加速 pip 安装（本地构建时请启用 DOCKER_BUILDKIT=1）
-RUN --mount=type=cache,target=/root/.cache/pip /opt/venv/bin/pip install -i ${PIP_MIRROR} --upgrade-strategy=only-if-needed -r /tmp/requirements.txt \
+RUN --mount=type=cache,target=/root/.cache/pip /opt/venv/bin/pip install -i "${PIP_MIRROR}" --upgrade-strategy=only-if-needed -r /tmp/requirements.txt \
     && rm -f /tmp/requirements.txt
 
 # Ensure collections dir exists even if no collections were installed
@@ -74,6 +74,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     iputils-ping \
     curl \
     vim-tiny \
+    gnupg \
+    gpg-agent \
     && rm -rf /var/lib/apt/lists/*
 
 # 复制虚拟环境与 Ansible 集合

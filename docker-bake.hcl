@@ -1,57 +1,53 @@
 ############################################################
-# Global variables
+# Variables
 ############################################################
 
-variable "VERSION" {
-  default = "latest"
-}
-
-variable "REGISTRY" {
-  default = ""
-}
-
+variable "VERSION" {}
+variable "REGISTRY" {}
 variable "PLATFORMS" {
   default = "linux/amd64,linux/arm64"
 }
-
-############################################################
-# Common definitions
-############################################################
-
-target "_ee_common" {
-  platforms = split(",", PLATFORMS)
-
-  labels = {
-    "org.opencontainers.image.source" = "https://github.com/${REGISTRY}"
-  }
+variable "PUSH" {
+  default = "false"
 }
 
 ############################################################
-# Base EE
+# Common
 ############################################################
 
-target "ee-base" {
-  inherits   = ["_ee_common"]
+target "_common" {
+  platforms = split(",", PLATFORMS)
+
+  output = PUSH == "true"
+    ? ["type=registry"]
+    : ["type=docker"]
+}
+
+############################################################
+# Base
+############################################################
+
+target "base" {
+  inherits   = ["_common"]
   context    = "ansible-ee-base"
   dockerfile = "Dockerfile"
 
   tags = [
     "${REGISTRY}/ansible-ee-base:${VERSION}",
-    "${REGISTRY}/ansible-ee-base:latest",
   ]
 }
 
 ############################################################
-# K3s EE (依赖 base)
+# K3s (depends on base)
 ############################################################
 
-target "ee-k3s" {
-  inherits   = ["_ee_common"]
+target "k3s" {
+  inherits   = ["_common"]
   context    = "ansible-ee-k3s"
   dockerfile = "Dockerfile"
   target     = "release"
 
-  depends_on = ["ee-base"]
+  depends_on = ["base"]
 
   args = {
     BASE_IMAGE = "${REGISTRY}/ansible-ee-base:${VERSION}"
@@ -59,7 +55,6 @@ target "ee-k3s" {
 
   tags = [
     "${REGISTRY}/ansible-ee-k3s:${VERSION}",
-    "${REGISTRY}/ansible-ee-k3s:latest",
   ]
 }
 
@@ -67,14 +62,6 @@ target "ee-k3s" {
 # Groups
 ############################################################
 
-group "base" {
-  targets = ["ee-base"]
-}
-
-group "apps" {
-  targets = ["ee-k3s"]
-}
-
 group "default" {
-  targets = ["ee-base", "ee-k3s"]
+  targets = ["base", "k3s"]
 }
