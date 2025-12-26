@@ -60,7 +60,6 @@ jobs:
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
             *.no-cache=true
-            *.platforms=linux/amd64
 
       - name: Verify Base Image
         if: env.FAKE_PUSH == 'true'

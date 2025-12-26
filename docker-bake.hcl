@@ -53,6 +53,4 @@ target "k3s" {
 # ---------------------------
 group "all" {
   targets   = ["base", "k3s"]
-  # 注意：在 CI 的测试（fake_push）阶段，建议通过命令行覆盖为单平台
-  platforms = ["linux/amd64", "linux/arm64"]
 }
