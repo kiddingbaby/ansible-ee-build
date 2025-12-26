@@ -1,55 +1,69 @@
-# ---------------------------
-# Variables
-# ---------------------------
-variable "VERSION" {
+variable "VERSION" {}
+variable "GITHUB_SHA" {}
+
+variable "REGISTRY" { default = "ghcr.io/kiddingbaby" }
+variable "DEBIAN_MIRROR" { default = "mirrors.tuna.tsinghua.edu.cn" }
+variable "PIP_MIRROR" { default = "https://pypi.tuna.tsinghua.edu.cn/simple/" }
+
+locals {
+  GITHUB_REPOSITORY = "https://github.com/kiddingbaby/ansible-ee-build"
+
+  IMAGE_BASE = "ansible-ee-base"
+  IMAGE_K3S  = "ansible-ee-k3s"
 }
 
-variable "REGISTRY" {
-  default = "ghcr.io/kiddingbaby"
-}
-
-# ---------------------------
-# Common configuration
-# ---------------------------
 target "_common" {
   labels = {
-    "org.opencontainers.image.source"  = "https://github.com/kiddingbaby/ansible-ee-build"
-    "org.opencontainers.image.version" = "${VERSION}"
-    "org.opencontainers.image.licenses" = "MIT"
+    org.opencontainers.image.source   = local.GITHUB_REPOSITORY
+    org.opencontainers.image.version  = var.VERSION
+    org.opencontainers.image.revision = var.GITHUB_SHA
+    org.opencontainers.image.licenses = "MIT"
+    org.opencontainers.image.vendor   = "HomeLab"
   }
+
   args = {
-    VERSION = "${VERSION}"
+    DEBIAN_MIRROR = var.DEBIAN_MIRROR
   }
 }
 
-# ---------------------------
-# Base image target
-# ---------------------------
 target "base" {
   inherits   = ["_common"]
   context    = "ansible-ee-base"
   dockerfile = "Dockerfile"
-  tags       = ["${REGISTRY}/ansible-ee-base:${VERSION}"]
+
+  labels = {
+    org.opencontainers.image.title       = "Ansible Execution Environment Base"
+    org.opencontainers.image.description = "Minimal Ansible EE with Python 3.11, Ansible Core and Runner"
+  }
+
+  args = {
+    PIP_MIRROR = var.PIP_MIRROR
+  }
+
+  tags = ["${var.REGISTRY}/${local.IMAGE_BASE}:${var.VERSION}"]
 }
 
-# ---------------------------
-# K3s image target
-# ---------------------------
 target "k3s" {
   inherits   = ["_common"]
   context    = "ansible-ee-k3s"
   dockerfile = "Dockerfile"
-  target     = "release"
-  # 关键点：将 target "base" 的输出映射为 base_image 上下文
+
   contexts = {
     base_image = "target:base"
   }
-  tags = ["${REGISTRY}/ansible-ee-k3s:${VERSION}"]
+
+  args = {
+    PIP_MIRROR = var.PIP_MIRROR
+  }
+
+  labels = {
+    org.opencontainers.image.title       = "Ansible EE for k3s"
+    org.opencontainers.image.description = "Ansible Execution Environment for k3s cluster management"
+  }
+
+  tags = ["${var.REGISTRY}/${local.IMAGE_K3S}:${var.VERSION}"]
 }
 
-# ---------------------------
-# Build Groups
-# ---------------------------
 group "all" {
-  targets   = ["base", "k3s"]
+  targets = ["base", "k3s"]
 }
