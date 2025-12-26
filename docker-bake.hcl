@@ -14,7 +14,7 @@ locals {
 
 target "_common" {
   labels = {
-    "org.opencontainers.image.source"   = "${local.GITHUB_REPOSITORY}"
+    "org.opencontainers.image.source"   = "${locals.GITHUB_REPOSITORY}"
     "org.opencontainers.image.version"  = "${VERSION}"
     "org.opencontainers.image.revision" = "${GITHUB_SHA}"
     "org.opencontainers.image.licenses" = "MIT"
@@ -40,7 +40,7 @@ target "base" {
     PIP_MIRROR = "${PIP_MIRROR}"
   }
 
-  tags = ["${REGISTRY}/${local.IMAGE_BASE}:${VERSION}"]
+  tags = ["${REGISTRY}/${locals.IMAGE_BASE}:${VERSION}"]
 }
 
 target "k3s" {
@@ -61,7 +61,7 @@ target "k3s" {
     "org.opencontainers.image.description" = "Ansible Execution Environment for k3s cluster management"
   }
 
-  tags = ["${REGISTRY}/${local.IMAGE_K3S}:${VERSION}"]
+  tags = ["${REGISTRY}/${locals.IMAGE_K3S}:${VERSION}"]
 }
 
 group "all" {
