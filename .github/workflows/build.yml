@@ -17,8 +17,7 @@ jobs:
 
     env:
       REGISTRY: ghcr.io/kiddingbaby
-      BUILDER_NAME: ansible-ee-builder
-      FAKE_PUSH: true   # true = 假 push, false = 真 push
+      FAKE_PUSH: true
 
     steps:
       - uses: actions/checkout@v4
@@ -28,18 +27,6 @@ jobs:
 
       - name: Setup Buildx
         uses: docker/setup-buildx-action@v3
-
-      - name: Create / use fixed builder
-        run: |
-          docker buildx create --name $BUILDER_NAME --use || docker buildx use $BUILDER_NAME
-          docker buildx inspect --bootstrap
-
-      - name: Optional prune for FAKE_PUSH
-        if: env.FAKE_PUSH == 'true'
-        run: |
-          echo "FAKE_PUSH=true, pruning old buildx builders and cache..."
-          docker buildx prune --all --force --filter "until=24h"
-          docker builder prune --all --force
 
       - name: Compute VERSION
         id: compute_version
@@ -68,5 +55,6 @@ jobs:
           load: ${{ env.FAKE_PUSH == 'true' }}
           set: |
             *.args.VERSION=${{ steps.compute_version.outputs.version }}
+            *.no-cache=${{ env.FAKE_PUSH == 'true' }}
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
