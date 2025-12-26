@@ -54,6 +54,7 @@ jobs:
           files: docker-bake.hcl
           targets: ${{ env.TARGETS }}
           push: ${{ env.FAKE_PUSH == 'false' }}
+          load: ${{ env.FAKE_PUSH == 'true' }}
           set: |
             *.args.VERSION=${{ steps.compute_version.outputs.version }}
             *.cache-from=type=gha
