@@ -9,16 +9,10 @@ variable "REGISTRY" {
   default = "ghcr.io/kiddingbaby"
 }
 
-variable "PLATFORMS" {
-  default = "linux/amd64"
-}
-
 # ---------------------------
 # Common target
 # ---------------------------
 target "_common" {
-  platforms = ["${PLATFORMS}"]
-
   labels = {
     "org.opencontainers.image.source"   = "https://github.com/kiddingbaby/ansible-ee-build"
     "org.opencontainers.image.version"  = "${VERSION}"
@@ -60,4 +54,11 @@ target "k3s" {
 # ---------------------------
 group "default" {
   targets = ["base", "k3s"]
+  platforms = ["linux/amd64","linux/arm64"]
+}
+
+# 仅用于测试构建，不推送镜像
+group "fake-push" {
+  targets = ["base", "k3s"]
+  platforms = ["linux/amd64"]
 }
