@@ -51,12 +51,7 @@ target "k3s" {
 # ---------------------------
 # Groups
 # ---------------------------
-group "base-group" {
-  targets = ["base"]
-  platforms = ["linux/amd64", "linux/arm64"]
-}
-
-group "k3s-group" {
-  targets = ["k3s"]
+group "all" {
+  targets   = ["base", "k3s"]
   platforms = ["linux/amd64", "linux/arm64"]
 }
