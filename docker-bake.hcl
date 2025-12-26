@@ -43,8 +43,7 @@ target "k3s" {
   dockerfile = "Dockerfile"
   target     = "release"
   args = {
-    # 拆分 bake 时必须替换为真实 base 镜像
-    BASE_IMAGE = "${REGISTRY}/ansible-ee-base:${VERSION}"
+    BASE_IMAGE = "target:base"
   }
   tags = ["${REGISTRY}/ansible-ee-k3s:${VERSION}"]
 }
@@ -52,12 +51,12 @@ target "k3s" {
 # ---------------------------
 # Groups
 # ---------------------------
-group "base-only" {
+group "base-group" {
   targets = ["base"]
   platforms = ["linux/amd64", "linux/arm64"]
 }
 
-group "k3s-only" {
+group "k3s-group" {
   targets = ["k3s"]
   platforms = ["linux/amd64", "linux/arm64"]
 }

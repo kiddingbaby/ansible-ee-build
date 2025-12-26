@@ -52,7 +52,7 @@ jobs:
         uses: docker/bake-action@v5
         with:
           files: docker-bake.hcl
-          targets: base-only
+          targets: base-group
           push: ${{ env.FAKE_PUSH == 'false' }}
           load: ${{ env.FAKE_PUSH == 'true' }}
           set: |
@@ -68,7 +68,7 @@ jobs:
         uses: docker/bake-action@v5
         with:
           files: docker-bake.hcl
-          targets: k3s-only
+          targets: k3s-group
           push: ${{ env.FAKE_PUSH == 'false' }}
           load: ${{ env.FAKE_PUSH == 'true' }}
           set: |
