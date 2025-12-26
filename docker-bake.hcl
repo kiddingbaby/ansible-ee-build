@@ -14,15 +14,15 @@ locals {
 
 target "_common" {
   labels = {
-    "org.opencontainers.image.source"   = local.GITHUB_REPOSITORY
-    "org.opencontainers.image.version"  = var.VERSION
-    "org.opencontainers.image.revision" = var.GITHUB_SHA
+    "org.opencontainers.image.source"   = "${local.GITHUB_REPOSITORY}"
+    "org.opencontainers.image.version"  = "${VERSION}"
+    "org.opencontainers.image.revision" = "${GITHUB_SHA}"
     "org.opencontainers.image.licenses" = "MIT"
     "org.opencontainers.image.vendor"   = "HomeLab"
   }
 
   args = {
-    DEBIAN_MIRROR = var.DEBIAN_MIRROR
+    DEBIAN_MIRROR = "${DEBIAN_MIRROR}"
   }
 }
 
@@ -37,10 +37,10 @@ target "base" {
   }
 
   args = {
-    PIP_MIRROR = var.PIP_MIRROR
+    PIP_MIRROR = "${PIP_MIRROR}"
   }
 
-  tags = ["${var.REGISTRY}/${local.IMAGE_BASE}:${var.VERSION}"]
+  tags = ["${REGISTRY}/${local.IMAGE_BASE}:${VERSION}"]
 }
 
 target "k3s" {
@@ -53,7 +53,7 @@ target "k3s" {
   }
 
   args = {
-    PIP_MIRROR = var.PIP_MIRROR
+    PIP_MIRROR = "${PIP_MIRROR}"
   }
 
   labels = {
@@ -61,7 +61,7 @@ target "k3s" {
     "org.opencontainers.image.description" = "Ansible Execution Environment for k3s cluster management"
   }
 
-  tags = ["${var.REGISTRY}/${local.IMAGE_K3S}:${var.VERSION}"]
+  tags = ["${REGISTRY}/${local.IMAGE_K3S}:${VERSION}"]
 }
 
 group "all" {
