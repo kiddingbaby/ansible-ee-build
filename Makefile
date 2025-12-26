@@ -1,31 +1,16 @@
-# Makefile for Ansible EE build
-
 DOCKER ?= docker
 TARGET ?= default
-PUSH ?= false
+RUN_PUSH ?= false
+VERSION ?= dev
 
-VERSION  := $(shell cat VERSION)
-OWNER    := kiddingbaby
-REGISTRY_HOST ?= ghcr.io
-REGISTRY ?= $(REGISTRY_HOST)/$(OWNER)
+PUSH_OPT := $(if $(filter true,$(RUN_PUSH)),--push,)
 
-ifeq ($(PUSH),true)
-    PUSH_FLAG := --push
-else
-    PUSH_FLAG := --load
-endif
+.PHONY: build clean
 
-.PHONY: build
 build:
-	$(DOCKER) buildx bake \
-		-f docker-bake.hcl \
-		$(TARGET) \
-		--set *.args.REGISTRY=$(REGISTRY) \
-		--set *.args.VERSION=$(VERSION) \
-		$(PUSH_FLAG)
+	@echo "Building images (RUN_PUSH=$(RUN_PUSH))..."
+	$(DOCKER) buildx bake -f docker-bake.hcl $(TARGET) --set *.args.VERSION=$(VERSION) $(PUSH_OPT)
 
-.PHONY: clean
 clean:
-	-$(DOCKER) image rm $(REGISTRY)/ansible-ee-base:$(VERSION) || true
-	-$(DOCKER) image rm $(REGISTRY)/ansible-ee-k3s:$(VERSION) || true
-	-$(DOCKER) image rm $(REGISTRY)/ansible-ee-k3s-dev:$(VERSION) || true
+	-$(DOCKER) image rm ghcr.io/kiddingbaby/ansible-ee-base:$(VERSION) || true
+	-$(DOCKER) image rm ghcr.io/kiddingbaby/ansible-ee-k3s:$(VERSION) || true

@@ -3,7 +3,7 @@
 ############################
 # Builder stage
 ############################
-ARG BASE_IMAGE="${REGISTRY}/ansible-ee-base:${VERSION}"
+ARG BASE_IMAGE
 FROM ${BASE_IMAGE} AS builder
 
 LABEL maintainer="HomeLab User" \

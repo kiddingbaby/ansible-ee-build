@@ -1,12 +1,8 @@
-############################################################
-# docker-bake.hcl - Enterprise-grade, simplified
-############################################################
-
 # ---------------------------
 # Variables
 # ---------------------------
 variable "VERSION" {
-  default = "1.0.0"
+  default = "dev"
 }
 
 variable "REGISTRY" {
@@ -21,7 +17,7 @@ variable "PLATFORMS" {
 # Common target
 # ---------------------------
 target "_common" {
-  platforms = split(",", PLATFORMS)
+  platforms = split(",", replace(PLATFORMS, " ", ""))
 
   labels = {
     "org.opencontainers.image.source"   = "https://github.com/kiddingbaby/ansible-ee-build"
@@ -30,26 +26,22 @@ target "_common" {
   }
 
   args = {
-    VERSION  = "${VERSION}"
-    REGISTRY = "${REGISTRY}"
+    VERSION = "${VERSION}"
   }
 }
 
 # ---------------------------
-# Base target
+# Base image
 # ---------------------------
 target "base" {
   inherits   = ["_common"]
   context    = "ansible-ee-base"
   dockerfile = "Dockerfile"
-
-  tags = [
-    "${REGISTRY}/ansible-ee-base:${VERSION}",
-  ]
+  tags = ["${REGISTRY}/ansible-ee-base:${VERSION}"]
 }
 
 # ---------------------------
-# K3s release target
+# K3s release image
 # ---------------------------
 target "k3s" {
   inherits   = ["_common"]
@@ -57,19 +49,23 @@ target "k3s" {
   dockerfile = "Dockerfile"
   target     = "release"
   depends_on = ["base"]
-
   args = {
-    BASE_IMAGE = "${REGISTRY}/ansible-ee-base:${VERSION}"
+    BASE_IMAGE = "target:base"
   }
-
-  tags = [
-    "${REGISTRY}/ansible-ee-k3s:${VERSION}",
-  ]
+  tags = ["${REGISTRY}/ansible-ee-k3s:${VERSION}"]
 }
 
 # ---------------------------
-# Default group (full release build)
+# Groups
 # ---------------------------
 group "default" {
   targets = ["base", "k3s"]
+}
+
+group "base-group" {
+  targets = ["base"]
+}
+
+group "k3s-group" {
+  targets = ["k3s"]
 }
