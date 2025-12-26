@@ -52,6 +52,6 @@ jobs:
           load: ${{ env.FAKE_PUSH == 'true' }}
           set: |
             *.args.VERSION=${{ steps.compute_version.outputs.version }}
-            *.platforms=${{ env.FAKE_PUSH == 'true' && 'linux/amd64' || 'linux/amd64,linux/arm64' }}
+            *.platforms=linux/amd64
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
