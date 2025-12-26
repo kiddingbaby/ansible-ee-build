@@ -56,13 +56,14 @@ jobs:
 
       - name: Build and Bake
         uses: docker/bake-action@v5
+        env:
+          VERSION: ${{ steps.compute_version.outputs.version }}
         with:
           files: docker-bake.hcl
           targets: all
           push: false
           load: true
           set: |
-            VERSION=${{ steps.compute_version.outputs.version }}
             *.args.VERSION=${{ steps.compute_version.outputs.version }}
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
