@@ -1,19 +1,15 @@
 DOCKER ?= docker
 TARGET ?= default
-PUSH ?= false
 VERSION ?= dev
-
-.PHONY: build clean
+DO_PUSH ?= false
 
 build:
-	ifeq ($(PUSH),true)
-		@echo "Building and pushing image..."
-		$(DOCKER) buildx bake -f docker-bake.hcl $(TARGET) --set *.args.VERSION=$(VERSION) --push
-	else
-		@echo "Building and loading image locally..."
-		$(DOCKER) buildx bake -f docker-bake.hcl $(TARGET) --set *.args.VERSION=$(VERSION) --load
-	endif
+	@echo "Building images (DO_PUSH=$(DO_PUSH))..."
+	$(DOCKER) buildx bake -f docker-bake.hcl $(TARGET) \
+		--set *.args.VERSION=$(VERSION) \
+		$(if $(filter true,$(DO_PUSH)),--push,--load)
 
 clean:
-	-$(DOCKER) image rm ghcr.io/kiddingbaby/ansible-ee-base:$(VERSION) || true
-	-$(DOCKER) image rm ghcr.io/kiddingbaby/ansible-ee-k3s:$(VERSION) || true
+	@echo "Cleaning images..."
+	-$(DOCKER) image rm -f ansible-ee-base:$(VERSION) || true
+	-$(DOCKER) image rm -f ansible-ee-k3s:$(VERSION) || true

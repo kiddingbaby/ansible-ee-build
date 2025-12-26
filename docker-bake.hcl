@@ -10,7 +10,7 @@ variable "REGISTRY" {
 }
 
 variable "PLATFORMS" {
-  default = "linux/amd64,linux/arm64"
+  default = "linux/amd64"
 }
 
 # ---------------------------
@@ -27,6 +27,7 @@ target "_common" {
 
   args = {
     VERSION = "${VERSION}"
+    PLATFORMS = "${PLATFORMS}"
   }
 }
 
@@ -62,10 +63,10 @@ group "default" {
   targets = ["base", "k3s"]
 }
 
-group "base-group" {
+group "base" {
   targets = ["base"]
 }
 
-group "k3s-group" {
+group "k3s" {
   targets = ["k3s"]
 }

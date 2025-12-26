@@ -16,12 +16,9 @@ jobs:
       packages: write
 
     env:
-      # Container registry
       REGISTRY: ghcr.io/kiddingbaby
-      # docker-bake.hcl defines the targets
       TARGETS: default
-      # Set to true for testing purposes, false for actual push
-      FAKE_PUSH: true
+      FAKE_PUSH: true   # true=假push, false=实际push
 
     steps:
       - uses: actions/checkout@v4
@@ -38,7 +35,15 @@ jobs:
             VERSION="dev-$(git rev-parse --short=7 HEAD)"
           fi
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
-          echo "FAKE_PUSH=${FAKE_PUSH}"
+
+      - name: Set platforms
+        id: set_platforms
+        run: |
+          if [[ "${FAKE_PUSH}" == "true" ]]; then
+            echo "platforms=linux/amd64" >> $GITHUB_OUTPUT
+          else
+            echo "platforms=linux/amd64,linux/arm64" >> $GITHUB_OUTPUT
+          fi
 
       - name: Login registry
         if: env.FAKE_PUSH == 'false'
@@ -57,5 +62,6 @@ jobs:
           load: ${{ env.FAKE_PUSH == 'true' }}
           set: |
             *.args.VERSION=${{ steps.compute_version.outputs.version }}
+            *.args.PLATFORMS=${{ steps.set_platforms.outputs.platforms }}
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
