@@ -56,11 +56,11 @@ jobs:
           push: false
           load: false
           set: |
+            *.args.VERSION=${{ steps.compute_version.outputs.version }}
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
             *.no-cache=true
             *.platforms=linux/amd64
-            VERSION=${{ steps.compute_version.outputs.version }}
 
       - name: Verify Base Image
         if: env.FAKE_PUSH == 'true'
