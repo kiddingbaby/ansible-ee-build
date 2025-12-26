@@ -2,7 +2,7 @@
 # Variables
 # ---------------------------
 variable "VERSION" {
-  default = "dev"
+  # 不设置 default，强制外部注入
 }
 
 variable "REGISTRY" {

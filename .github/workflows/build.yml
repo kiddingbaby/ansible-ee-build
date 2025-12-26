@@ -16,6 +16,7 @@ jobs:
       packages: write
 
     env:
+      VERSION: ""
       REGISTRY: ghcr.io/kiddingbaby
       # 当你需要测试构建而不推送到仓库时保持为 true
       FAKE_PUSH: true
@@ -38,6 +39,11 @@ jobs:
           else
             VERSION="dev-$(git rev-parse --short=7 HEAD)"
           fi
+
+          if [ -z "${VERSION}" ]; then
+            echo "错误: VERSION 参数丢失，构建终止！"
+            exit 1
+          fi
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Login to GHCR
@@ -48,7 +54,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and Test (Bake)
+      - name: Build and Bake
         uses: docker/bake-action@v5
         with:
           files: docker-bake.hcl
