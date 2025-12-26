@@ -62,6 +62,7 @@ jobs:
           push: false
           load: true
           set: |
+            VERSION=${{ steps.compute_version.outputs.version }}
             *.args.VERSION=${{ steps.compute_version.outputs.version }}
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
