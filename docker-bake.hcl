@@ -10,22 +10,21 @@ variable "REGISTRY" {
 }
 
 # ---------------------------
-# Common target
+# Common configuration
 # ---------------------------
 target "_common" {
   labels = {
-    "org.opencontainers.image.source"   = "https://github.com/kiddingbaby/ansible-ee-build"
-    "org.opencontainers.image.version"  = "${VERSION}"
+    "org.opencontainers.image.source"  = "https://github.com/kiddingbaby/ansible-ee-build"
+    "org.opencontainers.image.version" = "${VERSION}"
     "org.opencontainers.image.licenses" = "MIT"
   }
-
   args = {
     VERSION = "${VERSION}"
   }
 }
 
 # ---------------------------
-# Base image
+# Base image target
 # ---------------------------
 target "base" {
   inherits   = ["_common"]
@@ -35,23 +34,25 @@ target "base" {
 }
 
 # ---------------------------
-# K3s release image
+# K3s image target
 # ---------------------------
 target "k3s" {
   inherits   = ["_common"]
   context    = "ansible-ee-k3s"
   dockerfile = "Dockerfile"
   target     = "release"
-  args = {
-    BASE_IMAGE = "target:base"
+  # 关键点：将 target "base" 的输出映射为 base_image 上下文
+  contexts = {
+    base_image = "target:base"
   }
   tags = ["${REGISTRY}/ansible-ee-k3s:${VERSION}"]
 }
 
 # ---------------------------
-# Groups
+# Build Groups
 # ---------------------------
 group "all" {
   targets   = ["base", "k3s"]
+  # 注意：在 CI 的测试（fake_push）阶段，建议通过命令行覆盖为单平台
   platforms = ["linux/amd64", "linux/arm64"]
 }

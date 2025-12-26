@@ -3,8 +3,7 @@
 ############################
 # Builder stage
 ############################
-ARG BASE_IMAGE
-FROM ${BASE_IMAGE} AS builder
+FROM base_image AS builder
 
 LABEL maintainer="HomeLab User" \
       org.opencontainers.image.title="K3S Runtime Ansible EE" \
