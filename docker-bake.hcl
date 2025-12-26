@@ -14,11 +14,11 @@ locals {
 
 target "_common" {
   labels = {
-    org.opencontainers.image.source   = local.GITHUB_REPOSITORY
-    org.opencontainers.image.version  = var.VERSION
-    org.opencontainers.image.revision = var.GITHUB_SHA
-    org.opencontainers.image.licenses = "MIT"
-    org.opencontainers.image.vendor   = "HomeLab"
+    "org.opencontainers.image.source"   = local.GITHUB_REPOSITORY
+    "org.opencontainers.image.version"  = var.VERSION
+    "org.opencontainers.image.revision" = var.GITHUB_SHA
+    "org.opencontainers.image.licenses" = "MIT"
+    "org.opencontainers.image.vendor"   = "HomeLab"
   }
 
   args = {
@@ -32,8 +32,8 @@ target "base" {
   dockerfile = "Dockerfile"
 
   labels = {
-    org.opencontainers.image.title       = "Ansible Execution Environment Base"
-    org.opencontainers.image.description = "Minimal Ansible EE with Python 3.11, Ansible Core and Runner"
+    "org.opencontainers.image.title"       = "Ansible Execution Environment Base"
+    "org.opencontainers.image.description" = "Minimal Ansible EE with Python 3.11, Ansible Core and Runner"
   }
 
   args = {
@@ -57,8 +57,8 @@ target "k3s" {
   }
 
   labels = {
-    org.opencontainers.image.title       = "Ansible EE for k3s"
-    org.opencontainers.image.description = "Ansible Execution Environment for k3s cluster management"
+    "org.opencontainers.image.title"       = "Ansible EE for k3s"
+    "org.opencontainers.image.description" = "Ansible Execution Environment for k3s cluster management"
   }
 
   tags = ["${var.REGISTRY}/${local.IMAGE_K3S}:${var.VERSION}"]

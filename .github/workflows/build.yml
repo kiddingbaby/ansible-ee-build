@@ -16,6 +16,7 @@ jobs:
       packages: write
 
     env:
+      VERSION: ""
       REGISTRY: ghcr.io/kiddingbaby
 
     steps:
