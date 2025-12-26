@@ -17,7 +17,7 @@ jobs:
 
     env:
       REGISTRY: ghcr.io/kiddingbaby
-      FAKE_PUSH: true
+      FAKE_PUSH: true  # true = 假 push, false = 真 push
 
     steps:
       - uses: actions/checkout@v4
@@ -46,11 +46,30 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build EE images
+      # ---------------------------
+      # Step 1: Build base image
+      # ---------------------------
+      - name: Build base image
         uses: docker/bake-action@v5
         with:
           files: docker-bake.hcl
-          targets: ${{ env.FAKE_PUSH == 'true' && 'fake-push' || 'default' }}
+          targets: base-only
+          push: ${{ env.FAKE_PUSH == 'false' }}
+          load: ${{ env.FAKE_PUSH == 'true' }}
+          set: |
+            *.args.VERSION=${{ steps.compute_version.outputs.version }}
+            *.no-cache=${{ env.FAKE_PUSH == 'true' }}
+            *.cache-from=type=gha
+            *.cache-to=type=gha,mode=max
+
+      # ---------------------------
+      # Step 2: Build k3s image
+      # ---------------------------
+      - name: Build k3s image
+        uses: docker/bake-action@v5
+        with:
+          files: docker-bake.hcl
+          targets: k3s-only
           push: ${{ env.FAKE_PUSH == 'false' }}
           load: ${{ env.FAKE_PUSH == 'true' }}
           set: |
