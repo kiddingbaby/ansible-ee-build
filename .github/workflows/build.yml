@@ -18,7 +18,7 @@ jobs:
     env:
       REGISTRY: ghcr.io/kiddingbaby
       TARGETS: default
-      FAKE_PUSH: true   # true=假push, false=实际push
+      FAKE_PUSH: true  # true = 假 push, false = 实际 push
 
     steps:
       - uses: actions/checkout@v4
@@ -27,7 +27,6 @@ jobs:
 
       - name: Compute VERSION
         id: compute_version
-        shell: bash
         run: |
           if [[ "${GITHUB_REF}" =~ refs/tags/(.*) ]]; then
             VERSION="${BASH_REMATCH[1]}"
@@ -35,15 +34,6 @@ jobs:
             VERSION="dev-$(git rev-parse --short=7 HEAD)"
           fi
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
-
-      - name: Set platforms
-        id: set_platforms
-        run: |
-          if [[ "${FAKE_PUSH}" == "true" ]]; then
-            echo "platforms=linux/amd64" >> $GITHUB_OUTPUT
-          else
-            echo "platforms=linux/amd64,linux/arm64" >> $GITHUB_OUTPUT
-          fi
 
       - name: Login registry
         if: env.FAKE_PUSH == 'false'
@@ -62,6 +52,6 @@ jobs:
           load: ${{ env.FAKE_PUSH == 'true' }}
           set: |
             *.args.VERSION=${{ steps.compute_version.outputs.version }}
-            *.args.PLATFORMS=${{ steps.set_platforms.outputs.platforms }}
+            *.platforms=${{ env.FAKE_PUSH == 'true' && 'linux/amd64' || 'linux/amd64,linux/arm64' }}
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max

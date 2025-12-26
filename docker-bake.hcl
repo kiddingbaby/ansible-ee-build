@@ -10,7 +10,7 @@ variable "REGISTRY" {
 }
 
 variable "PLATFORMS" {
-  default = "linux/amd64"
+  default = "linux/amd64"  # 默认单平台
 }
 
 # ---------------------------
@@ -27,7 +27,6 @@ target "_common" {
 
   args = {
     VERSION = "${VERSION}"
-    PLATFORMS = "${PLATFORMS}"
   }
 }
 
@@ -38,7 +37,7 @@ target "base" {
   inherits   = ["_common"]
   context    = "ansible-ee-base"
   dockerfile = "Dockerfile"
-  tags = ["${REGISTRY}/ansible-ee-base:${VERSION}"]
+  tags       = ["${REGISTRY}/ansible-ee-base:${VERSION}"]
 }
 
 # ---------------------------
@@ -61,12 +60,4 @@ target "k3s" {
 # ---------------------------
 group "default" {
   targets = ["base", "k3s"]
-}
-
-group "base" {
-  targets = ["base"]
-}
-
-group "k3s" {
-  targets = ["k3s"]
 }
