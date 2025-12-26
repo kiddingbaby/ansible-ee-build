@@ -54,7 +54,7 @@ jobs:
           files: docker-bake.hcl
           targets: all
           push: false
-          load: false
+          load: true
           set: |
             *.args.VERSION=${{ steps.compute_version.outputs.version }}
             *.cache-from=type=gha
