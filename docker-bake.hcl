@@ -10,14 +10,14 @@ variable "REGISTRY" {
 }
 
 variable "PLATFORMS" {
-  default = "linux/amd64"  # 默认单平台
+  default = "linux/amd64"
 }
 
 # ---------------------------
 # Common target
 # ---------------------------
 target "_common" {
-  platforms = split(",", replace(PLATFORMS, " ", ""))
+  platforms = ["${PLATFORMS}"]
 
   labels = {
     "org.opencontainers.image.source"   = "https://github.com/kiddingbaby/ansible-ee-build"
