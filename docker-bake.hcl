@@ -1,20 +1,9 @@
-variable "VERSION" {
-}
+variable "VERSION" {}
+variable "GITHUB_SHA" {}
 
-variable "GITHUB_SHA" {
-}
-
-variable "REGISTRY" {
-  default = "ghcr.io/kiddingbaby"
-}
-
-variable "DEBIAN_MIRROR" {
-  default = "mirrors.tuna.tsinghua.edu.cn"
-}
-
-variable "PIP_MIRROR" {
-  default = "https://pypi.tuna.tsinghua.edu.cn/simple/"
-}
+variable "REGISTRY" { default = "ghcr.io/kiddingbaby" }
+variable "DEBIAN_MIRROR" { default = "mirrors.tuna.tsinghua.edu.cn" }
+variable "PIP_MIRROR" { default = "https://pypi.tuna.tsinghua.edu.cn/simple/" }
 
 locals {
   GITHUB_REPOSITORY = "https://github.com/kiddingbaby/ansible-ee-build"
@@ -25,15 +14,15 @@ locals {
 
 target "_common" {
   labels = {
-    "org.opencontainers.image.source"   = local.GITHUB_REPOSITORY
-    "org.opencontainers.image.version"  = VERSION
-    "org.opencontainers.image.revision" = GITHUB_SHA
+    "org.opencontainers.image.source"   = "${local.GITHUB_REPOSITORY}"
+    "org.opencontainers.image.version"  = "${VERSION}"
+    "org.opencontainers.image.revision" = "${GITHUB_SHA}"
     "org.opencontainers.image.licenses" = "MIT"
     "org.opencontainers.image.vendor"   = "HomeLab"
   }
 
   args = {
-    DEBIAN_MIRROR = DEBIAN_MIRROR
+    DEBIAN_MIRROR = "${DEBIAN_MIRROR}"
   }
 }
 
@@ -48,12 +37,10 @@ target "base" {
   }
 
   args = {
-    PIP_MIRROR = PIP_MIRROR
+    PIP_MIRROR = "${PIP_MIRROR}"
   }
 
-  tags = [
-    "${REGISTRY}/${local.IMAGE_BASE}:${VERSION}"
-  ]
+  tags = ["${REGISTRY}/${local.IMAGE_BASE}:${VERSION}"]
 }
 
 target "k3s" {
@@ -66,7 +53,7 @@ target "k3s" {
   }
 
   args = {
-    PIP_MIRROR = PIP_MIRROR
+    PIP_MIRROR = "${PIP_MIRROR}"
   }
 
   labels = {
@@ -74,9 +61,7 @@ target "k3s" {
     "org.opencontainers.image.description" = "Ansible Execution Environment for k3s cluster management"
   }
 
-  tags = [
-    "${REGISTRY}/${local.IMAGE_K3S}:${VERSION}"
-  ]
+  tags = ["${REGISTRY}/${local.IMAGE_K3S}:${VERSION}"]
 }
 
 group "all" {
