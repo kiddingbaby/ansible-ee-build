@@ -4,17 +4,14 @@ variable "GITHUB_SHA" {}
 variable "REGISTRY" { default = "ghcr.io/kiddingbaby" }
 variable "DEBIAN_MIRROR" { default = "mirrors.tuna.tsinghua.edu.cn" }
 variable "PIP_MIRROR" { default = "https://pypi.tuna.tsinghua.edu.cn/simple/" }
+variable "GITHUB_REPOSITORY" { default = "https://github.com/kiddingbaby/ansible-ee-build" }
 
-locals {
-  GITHUB_REPOSITORY = "https://github.com/kiddingbaby/ansible-ee-build"
-
-  IMAGE_BASE = "ansible-ee-base"
-  IMAGE_K3S  = "ansible-ee-k3s"
-}
+variable "IMAGE_BASE" { default = "ansible-ee-base" }
+variable "IMAGE_K3S" { default = "ansible-ee-k3s" }
 
 target "_common" {
   labels = {
-    "org.opencontainers.image.source"   = "${local.GITHUB_REPOSITORY}"
+    "org.opencontainers.image.source"   = "${GITHUB_REPOSITORY}"
     "org.opencontainers.image.version"  = "${VERSION}"
     "org.opencontainers.image.revision" = "${GITHUB_SHA}"
     "org.opencontainers.image.licenses" = "MIT"
@@ -28,7 +25,7 @@ target "_common" {
 
 target "base" {
   inherits   = ["_common"]
-  context    = "ansible-ee-base"
+  context    = "${IMAGE_BASE}"
   dockerfile = "Dockerfile"
 
   labels = {
@@ -40,12 +37,12 @@ target "base" {
     PIP_MIRROR = "${PIP_MIRROR}"
   }
 
-  tags = ["${REGISTRY}/${local.IMAGE_BASE}:${VERSION}"]
+  tags = ["${REGISTRY}/${IMAGE_BASE}:${VERSION}"]
 }
 
 target "k3s" {
   inherits   = ["_common"]
-  context    = "ansible-ee-k3s"
+  context    = "${IMAGE_K3S}"
   dockerfile = "Dockerfile"
 
   contexts = {
@@ -61,7 +58,7 @@ target "k3s" {
     "org.opencontainers.image.description" = "Ansible Execution Environment for k3s cluster management"
   }
 
-  tags = ["${REGISTRY}/${local.IMAGE_K3S}:${VERSION}"]
+  tags = ["${REGISTRY}/${IMAGE_K3S}:${VERSION}"]
 }
 
 group "all" {
