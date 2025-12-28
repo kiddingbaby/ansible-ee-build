@@ -17,23 +17,24 @@ A professional, reproducible build system for Ansible Execution Environments (EE
 
 ## 📦 Image Hierarchy
 
-| Image             | Description                                                                                              | Context             |
-| :---------------- | :------------------------------------------------------------------------------------------------------- | :------------------ |
-| `ansible-ee-base` | The foundation. Contains Python 3.11, Ansible Core 2.17, Ansible Runner, and essential system libraries. | `./ansible-ee-base` |
-| `ansible-ee-k3s`  | Extends `base`. Adds Kubernetes tools (`kubectl`, `helm`) and K3s-specific Ansible collections.          | `./ansible-ee-k3s`  |
+| Image          | Description                                                                                              | Context         |
+| -------------- | -------------------------------------------------------------------------------------------------------- | --------------- |
+| `ansible-base` | The foundation. Contains Python 3.11, Ansible Core 2.17, Ansible Runner, and essential system libraries. | `./images/base` |
+| `ansible-k3s`  | Extends `base`. Adds Kubernetes tools (`kubectl`, `helm`) and K3s-specific Ansible collections.          | `./images/k3s`  |
 
 ## 📂 Project Structure
 
 ```text
 .
-├── ansible-ee-base/      # Base image definition
-│   ├── Dockerfile
-│   ├── requirements.txt  # Python dependencies
-│   └── ansible.cfg
-├── ansible-ee-k3s/       # K3s extension image
-│   ├── Dockerfile
-│   ├── requirements.txt  # K3s specific Python deps
-│   └── requirements.yml  # Ansible collections
+├── images/
+│   ├── base/      # Base image definition
+│   │   ├── Dockerfile
+│   │   ├── requirements.txt  # Python dependencies
+│   │   └── ansible.cfg
+│   └── k3s/       # K3s extension image
+│       ├── Dockerfile
+│       ├── requirements.txt  # K3s specific Python deps
+│       └── requirements.yml  # Ansible collections
 ├── docker-bake.hcl       # BuildKit HCL definition
 ├── Makefile              # User interface wrapper
 └── .github/              # CI/CD workflows
@@ -101,10 +102,11 @@ Run the built image using Docker:
 
 ```bash
 # Run ansible --version
-docker run --rm ghcr.io/kiddingbaby/ansible-ee-base:dev-xxxxxxx ansible --version
+# Run ansible --version
+docker run --rm ghcr.io/kiddingbaby/ansible-base:dev-xxxxxxx ansible --version
 
 # Run an interactive shell
-docker run --rm -it ghcr.io/kiddingbaby/ansible-ee-k3s:dev-xxxxxxx bash
+docker run --rm -it ghcr.io/kiddingbaby/ansible-k3s:dev-xxxxxxx bash
 ```
 
 ## 📝 License

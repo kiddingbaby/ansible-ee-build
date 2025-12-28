@@ -17,23 +17,24 @@
 
 ## 📦 镜像层级
 
-| 镜像              | 描述                                                                                                  | 目录上下文          |
-| :---------------- | :---------------------------------------------------------------------------------------------------- | :------------------ |
-| `ansible-ee-base` | 基础镜像。包含 Python 3.11, Ansible Core 2.17, Ansible Runner 及基础系统库。                          | `./ansible-ee-base` |
-| `ansible-ee-k3s`  | 扩展镜像。基于 `base`，增加了 Kubernetes 工具 (`kubectl`, `helm`) 和 K3s 相关的 Ansible collections。 | `./ansible-ee-k3s`  |
+| 镜像           | 描述                                                                                                  | 目录上下文      |
+| -------------- | ----------------------------------------------------------------------------------------------------- | --------------- |
+| `ansible-base` | 基础镜像。包含 Python 3.11, Ansible Core 2.17, Ansible Runner 及基础系统库。                          | `./images/base` |
+| `ansible-k3s`  | 扩展镜像。基于 `base`，增加了 Kubernetes 工具 (`kubectl`, `helm`) 和 K3s 相关的 Ansible collections。 | `./images/k3s`  |
 
 ## 📂 项目结构
 
 ```text
 .
-├── ansible-ee-base/      # 基础镜像定义
-│   ├── Dockerfile
-│   ├── requirements.txt  # Python 依赖
-│   └── ansible.cfg
-├── ansible-ee-k3s/       # K3s 扩展镜像
-│   ├── Dockerfile
-│   ├── requirements.txt  # K3s 特有 Python 依赖
-│   └── requirements.yml  # Ansible collections
+├── images/
+│   ├── base/      # 基础镜像定义
+│   │   ├── Dockerfile
+│   │   ├── requirements.txt  # Python 依赖
+│   │   └── ansible.cfg
+│   └── k3s/       # K3s 扩展镜像
+│       ├── Dockerfile
+│       ├── requirements.txt  # K3s 特有 Python 依赖
+│       └── requirements.yml  # Ansible collections
 ├── docker-bake.hcl       # BuildKit HCL 定义文件
 ├── Makefile              # 用户操作入口 (Wrapper)
 └── .github/              # CI/CD 工作流
@@ -101,10 +102,10 @@ make load VERSION=v1.0.0
 
 ```bash
 # 查看 ansible 版本
-docker run --rm ghcr.io/kiddingbaby/ansible-ee-base:dev-xxxxxxx ansible --version
+docker run --rm ghcr.io/kiddingbaby/ansible-base:dev-xxxxxxx ansible --version
 
 # 运行交互式 Shell
-docker run --rm -it ghcr.io/kiddingbaby/ansible-ee-k3s:dev-xxxxxxx bash
+docker run --rm -it ghcr.io/kiddingbaby/ansible-k3s:dev-xxxxxxx bash
 ```
 
 ## 📝 许可证

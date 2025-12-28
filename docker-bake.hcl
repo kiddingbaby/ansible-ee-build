@@ -1,13 +1,13 @@
-variable "VERSION" {}
-variable "GITHUB_SHA" {}
+variable "VERSION" { default = "" }
+variable "GITHUB_SHA" { default = "" }
 
 variable "REGISTRY" { default = "ghcr.io/kiddingbaby" }
 variable "DEBIAN_MIRROR" { default = "mirrors.tuna.tsinghua.edu.cn" }
 variable "PIP_MIRROR" { default = "https://pypi.tuna.tsinghua.edu.cn/simple/" }
 variable "GITHUB_REPOSITORY" { default = "https://github.com/kiddingbaby/ansible-ee-build" }
 
-variable "IMAGE_BASE" { default = "ansible-ee-base" }
-variable "IMAGE_K3S" { default = "ansible-ee-k3s" }
+variable "IMAGE_BASE" { default = "ansible-base" }
+variable "IMAGE_K3S" { default = "ansible-k3s" }
 
 target "_common" {
   labels = {
@@ -25,8 +25,9 @@ target "_common" {
 
 target "base" {
   inherits   = ["_common"]
-  context    = "${IMAGE_BASE}"
+  context    = "images/base"
   dockerfile = "Dockerfile"
+  cache_to = ["type=gha,mode=max"]
 
   labels = {
     "org.opencontainers.image.title"       = "Ansible Execution Environment Base"
@@ -42,8 +43,10 @@ target "base" {
 
 target "k3s" {
   inherits   = ["_common"]
-  context    = "${IMAGE_K3S}"
+  context    = "images/k3s"
   dockerfile = "Dockerfile"
+  cache_from = ["type=gha,src=base"]
+  cache_to = ["type=gha,mode=max"]
 
   contexts = {
     base_image = "target:base"

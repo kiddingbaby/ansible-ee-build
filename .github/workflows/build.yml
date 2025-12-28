@@ -16,7 +16,6 @@ jobs:
       packages: write
 
     env:
-      VERSION: ""
       REGISTRY: ghcr.io/kiddingbaby
 
     steps:
@@ -37,12 +36,7 @@ jobs:
           else
             VERSION="dev-$(git rev-parse --short=7 HEAD)"
           fi
-
-          if [ -z "${VERSION}" ]; then
-            echo "错误: VERSION 参数丢失，构建终止！"
-            exit 1
-          fi
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Login to GHCR
         if: github.event_name != 'pull_request'
@@ -52,15 +46,38 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Detect changed files
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          list-files: json
+          filters: |
+            images:
+              - 'images/**'
+
+      - name: Set targets
+        id: set_targets
+        run: |
+          # Extract unique directory names from changed files under images/
+          TARGETS=$(jq -r '[.[] | split("/")[1]] | unique | join(",")' <<< '${{ steps.changes.outputs.images_files }}')
+
+          if [[ ",$TARGETS," == *",base,"* ]]; then
+            echo "targets=all" >> $GITHUB_OUTPUT
+          elif [[ -z "$TARGETS" ]]; then
+            echo "targets=none" >> $GITHUB_OUTPUT
+          else
+            echo "targets=$TARGETS" >> $GITHUB_OUTPUT
+          fi
+
       - name: Build and Bake
+        if: steps.set_targets.outputs.targets != 'none'
         uses: docker/bake-action@v6
         env:
           VERSION: ${{ steps.compute_version.outputs.version }}
           GITHUB_SHA: ${{ github.sha }}
         with:
           files: docker-bake.hcl
-          targets: all
-          # push: ${{ github.event_name != 'pull_request' }}
+          targets: ${{ steps.set_targets.outputs.targets }}
           push: false
           set: |
             *.cache-from=type=gha

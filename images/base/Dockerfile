@@ -80,4 +80,4 @@ RUN useradd -m -s /bin/bash ansible \
 USER ansible
 
 ENTRYPOINT ["/usr/bin/tini", "--"]
-CMD ["ansible-runner", "run", "/runner"]
+CMD ["bash"]

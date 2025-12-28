@@ -52,7 +52,7 @@ secrets.yml
 *.tar.zst
 
 # Large Resources
-ansible-ee-k3s/resources/**
+images/k3s/resources/**
 .docker/
 
 # Temporary / Cache
