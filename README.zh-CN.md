@@ -1,93 +1,112 @@
-# ansible-ee-build
+# Ansible Execution Environment 构建系统
 
 [English](./README.md) | [中文文档](./README.zh-CN.md)
 
-精简、可复现的 Ansible Execution Environments (EE) 镜像构建系统。
+基于 Docker BuildKit 和 HCL 的专业级、可复现 Ansible Execution Environments (EE) 镜像构建系统。
 
-## 核心特性
+## 🚀 核心特性
 
-- 构建引擎：Docker BuildKit + `docker buildx bake`（HCL）
-- 构建定义：`docker-bake.hcl`（唯一事实源）
-- 操作入口：`Makefile`（轻量封装）
+- **现代构建系统**：使用 `docker buildx bake` 和 HCL 进行声明式构建定义。
+- **镜像优化**：
+  - **多阶段构建**：减小镜像体积。
+  - **BuildKit 缓存挂载**：利用 `pip` 和 `apt` 缓存加速重复构建。
+  - **Tini 集成**：作为 init 进程正确处理信号。
+  - **非 Root 用户**：默认使用 `ansible` 用户，增强安全性。
+- **依赖管理**：本地 DAG 解析确保 `k3s` 镜像在 `base` 构建后正确构建，无需中间推送。
+- **CI/CD 就绪**：集成了 GitHub Actions 工作流，支持自动版本控制和 GHCR 发布。
 
-## 镜像
+## 📦 镜像层级
 
-- `ansible-ee-base`：运行时基础镜像（非 root 用户，预置 venv 与 collections）
-- `ansible-ee-k3s`：基于 base 扩展，集成 K3s/Kubernetes 运维工具
+| 镜像              | 描述                                                                                                  | 目录上下文          |
+| :---------------- | :---------------------------------------------------------------------------------------------------- | :------------------ |
+| `ansible-ee-base` | 基础镜像。包含 Python 3.11, Ansible Core 2.17, Ansible Runner 及基础系统库。                          | `./ansible-ee-base` |
+| `ansible-ee-k3s`  | 扩展镜像。基于 `base`，增加了 Kubernetes 工具 (`kubectl`, `helm`) 和 K3s 相关的 Ansible collections。 | `./ansible-ee-k3s`  |
 
-## 构建目标
+## 📂 项目结构
 
-- `default`：构建 `base` + `k3s`
-- `base`：仅构建基础镜像
-- `k3s`：构建 release 镜像
-- `k3s-dev`：构建 dev/debug 镜像
-
-## 快速开始
-
-构建 base：
-
-```bash
-make build TARGET=base
+```text
+.
+├── ansible-ee-base/      # 基础镜像定义
+│   ├── Dockerfile
+│   ├── requirements.txt  # Python 依赖
+│   └── ansible.cfg
+├── ansible-ee-k3s/       # K3s 扩展镜像
+│   ├── Dockerfile
+│   ├── requirements.txt  # K3s 特有 Python 依赖
+│   └── requirements.yml  # Ansible collections
+├── docker-bake.hcl       # BuildKit HCL 定义文件
+├── Makefile              # 用户操作入口 (Wrapper)
+└── .github/              # CI/CD 工作流
 ```
 
-构建 k3s（自动处理 base 依赖）：
+## 🛠️ 快速开始
+
+### 前置要求
+
+- Docker (支持 Buildx)
+- Make
+
+### 构建命令
+
+`Makefile` 提供了对 `docker buildx bake` 的便捷封装。
+
+**构建并加载到本地 Docker:**
+这是开发时的默认操作。它会构建镜像并将其加载到本地 Docker 守护进程中。
 
 ```bash
-make build TARGET=k3s
+make load
 ```
 
-构建全部：
+**构建并推送到仓库:**
+构建镜像并将其推送到配置的镜像仓库（默认：`ghcr.io/kiddingbaby`）。
 
 ```bash
 make build
 ```
 
-推送到仓库（需登录 `ghcr.io` 且 PAT 包含 `write:packages`）：
+**构建指定目标:**
+你可以使用 `TARGETS` 变量仅构建 base 镜像或 k3s 镜像。
 
 ```bash
-make build TARGET=k3s PUSH=true
+make load TARGETS=base
+make load TARGETS=k3s
 ```
 
-**说明**：
-
-- `PUSH=true` 会使用 `docker buildx bake --push` 推送。
-- `PUSH=false` 会使用 `docker buildx bake --load` 仅加载到本地。
-- `docker-bake.hcl` 默认 `PLATFORMS=linux/amd64,linux/arm64`。使用 `--load` 时需要设置为单一平台，例如：
+**清理:**
+从本地 Docker 中删除生成的镜像。
 
 ```bash
-PLATFORMS=linux/amd64 make build TARGET=base
+make clean
 ```
 
-## 配置
+## ⚙️ 配置
 
-- 版本：由仓库根目录 `VERSION` 文件驱动。
-- 仓库命名空间：默认 `REGISTRY=$(REGISTRY_HOST)/$(OWNER)`。
+你可以覆盖默认变量：
 
-覆盖示例：
+| 变量       | 默认值                | 描述                                           |
+| :--------- | :-------------------- | :--------------------------------------------- |
+| `VERSION`  | `dev-<short-sha>`     | 镜像的版本标签。                               |
+| `REGISTRY` | `ghcr.io/kiddingbaby` | 推送的目标镜像仓库。                           |
+| `TARGETS`  | `all`                 | 要构建的 bake 目标 (`base`, `k3s`, 或 `all`)。 |
+
+示例：
 
 ```bash
-make build TARGET=base REGISTRY_HOST=registry.example.com
-make build TARGET=base REGISTRY=registry.example.com/team
+make load VERSION=v1.0.0
 ```
 
-## 调试
+## 🏃 使用方法
 
-交互式 shell：
+使用 Docker 运行构建好的镜像：
 
 ```bash
-docker run --rm -it ghcr.io/kiddingbaby/ansible-ee-base:1.0.0 bash
+# 查看 ansible 版本
+docker run --rm ghcr.io/kiddingbaby/ansible-ee-base:dev-xxxxxxx ansible --version
+
+# 运行交互式 Shell
+docker run --rm -it ghcr.io/kiddingbaby/ansible-ee-k3s:dev-xxxxxxx bash
 ```
 
-## CI/CD
-
-- CI 与本地使用相同的 bake 定义。
-- 镜像版本由仓库根目录 `VERSION` 文件驱动。
-
-## 维护者说明
-
-- 构建逻辑（tags/platforms/args）应优先在 `docker-bake.hcl` 中定义。
-- 避免在 Makefile/CI 中重复定义构建参数。
-
-## 许可证
+## 📝 许可证
 
 MIT

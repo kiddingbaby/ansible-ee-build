@@ -1,28 +1,30 @@
 REGISTRY ?= ghcr.io/kiddingbaby
 VERSION  ?= dev-$(shell git rev-parse --short=7 HEAD)
-BBAKE    ?= docker buildx bake
+TARGETS  ?= all
 
-TARGETS ?= all
+BAKE := docker buildx bake
 
-.PHONY: build load push clean
+SMOKE_PROJECT := tests/smoke-test/project
+
+.PHONY: build clean smoke
 
 build:
-	$(BBAKE) --file docker-bake.hcl \
-		--set "VERSION=$(VERSION)" \
-		--set "GITHUB_SHA=$(shell git rev-parse HEAD)" \
-		--set "*.cache-from=type=gha" \
-		--set "*.cache-to=type=gha,mode=max" \
-		--push=true \
+	$(BAKE) \
+		-f docker-bake.hcl \
+		--load \
+		--set VERSION=$(VERSION) \
+		--set GITHUB_SHA=$(shell git rev-parse HEAD) \
+		--set REGISTRY=$(REGISTRY) \
 		$(TARGETS)
 
-load:
-	$(BBAKE) --file docker-bake.hcl \
-		--set "VERSION=$(VERSION)" \
-		--set "GITHUB_SHA=$(shell git rev-parse HEAD)" \
-		--set "*.cache-from=type=gha" \
-		--set "*.cache-to=type=gha,mode=max" \
-		--push=false --load \
-		$(TARGETS)
+smoke:
+	@if [ ! -d "$(SMOKE_PROJECT)" ]; then \
+	  echo "Smoke test project not found: $(SMOKE_PROJECT)"; exit 1; \
+	fi
+	docker run --rm \
+	  -v $(PWD)/$(SMOKE_PROJECT):/runner/project:ro \
+	  $(REGISTRY)/ansible-ee-base:$(VERSION) \
+	  ansible-runner run /runner -p site.yml
 
 clean:
 	docker image rm -f \

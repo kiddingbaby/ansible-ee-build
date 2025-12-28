@@ -1,94 +1,112 @@
-
-# ansible-ee-build
+# Ansible Execution Environment Build System
 
 [English](./README.md) | [中文文档](./README.zh-CN.md)
 
-Minimal, reproducible build system for Ansible Execution Environments (EE) images.
+A professional, reproducible build system for Ansible Execution Environments (EE), powered by Docker BuildKit and HCL.
 
-## Key Features
+## 🚀 Key Features
 
-- Build engine: Docker BuildKit + `docker buildx bake` (HCL)
-- Build definition: `docker-bake.hcl` (single source of truth)
-- Interface: `Makefile` (thin UX wrapper)
+- **Modern Build System**: Uses `docker buildx bake` with HCL for declarative build definitions.
+- **Optimized Images**:
+  - **Multi-stage builds** for smaller image sizes.
+  - **BuildKit Cache Mounts** (`pip`, `apt`) for faster rebuilds.
+  - **Tini** init process for proper signal handling.
+  - **Non-root user** (`ansible`) for security.
+- **Dependency Management**: Local DAG resolution ensures `k3s` image builds correctly after `base` without intermediate pushes.
+- **CI/CD Ready**: GitHub Actions workflow with automated versioning and GHCR publishing.
 
-## Images
+## 📦 Image Hierarchy
 
-- `ansible-ee-base`: Runtime base image (non-root, preconfigured venv and collections)
-- `ansible-ee-k3s`: Extends base with K3s/Kubernetes operational tools
+| Image             | Description                                                                                              | Context             |
+| :---------------- | :------------------------------------------------------------------------------------------------------- | :------------------ |
+| `ansible-ee-base` | The foundation. Contains Python 3.11, Ansible Core 2.17, Ansible Runner, and essential system libraries. | `./ansible-ee-base` |
+| `ansible-ee-k3s`  | Extends `base`. Adds Kubernetes tools (`kubectl`, `helm`) and K3s-specific Ansible collections.          | `./ansible-ee-k3s`  |
 
-## Targets
+## 📂 Project Structure
 
-- `default`: build `base` + `k3s`
-- `base`: build base image only
-- `k3s`: build release image
-- `k3s-dev`: build dev/debug image
-
-## Quick Start
-
-Build base:
-
-```bash
-make build TARGET=base
+```text
+.
+├── ansible-ee-base/      # Base image definition
+│   ├── Dockerfile
+│   ├── requirements.txt  # Python dependencies
+│   └── ansible.cfg
+├── ansible-ee-k3s/       # K3s extension image
+│   ├── Dockerfile
+│   ├── requirements.txt  # K3s specific Python deps
+│   └── requirements.yml  # Ansible collections
+├── docker-bake.hcl       # BuildKit HCL definition
+├── Makefile              # User interface wrapper
+└── .github/              # CI/CD workflows
 ```
 
-Build k3s (automatically builds base if needed):
+## 🛠️ Quick Start
+
+### Prerequisites
+
+- Docker (with Buildx support)
+- Make
+
+### Build Commands
+
+The `Makefile` simplifies the `docker buildx bake` commands.
+
+**Build and Load to Local Docker:**
+This is the default for development. It builds the images and loads them into your local Docker daemon.
 
 ```bash
-make build TARGET=k3s
+make load
 ```
 
-Build all:
+**Build and Push to Registry:**
+This builds the images and pushes them to the configured registry (default: `ghcr.io/kiddingbaby`).
 
 ```bash
 make build
 ```
 
-Push to registry (requires login to `ghcr.io` with a PAT that includes `write:packages`):
+**Build Specific Target:**
+You can build only the base image or the k3s image using the `TARGETS` variable.
 
 ```bash
-make build TARGET=k3s PUSH=true
+make load TARGETS=base
+make load TARGETS=k3s
 ```
 
-**Note**:
-
-- `PUSH=true` uses `docker buildx bake --push`.
-- `PUSH=false` uses `docker buildx bake --load`.
-- Default `PLATFORMS` is `linux/amd64,linux/arm64` (see `docker-bake.hcl`). When using `--load`, set a single platform, for example:
+**Clean Up:**
+Remove the generated images from local Docker.
 
 ```bash
-PLATFORMS=linux/amd64 make build TARGET=base
+make clean
 ```
 
-## Configuration
+## ⚙️ Configuration
 
-- Version: driven by the repository root `VERSION` file.
-- Registry namespace defaults to `REGISTRY=$(REGISTRY_HOST)/$(OWNER)`.
+You can override default variables:
 
-Override examples:
+| Variable   | Default               | Description                                            |
+| :--------- | :-------------------- | :----------------------------------------------------- |
+| `VERSION`  | `dev-<short-sha>`     | The tag version for the images.                        |
+| `REGISTRY` | `ghcr.io/kiddingbaby` | The container registry to push to.                     |
+| `TARGETS`  | `all`                 | The bake target(s) to build (`base`, `k3s`, or `all`). |
+
+Example:
 
 ```bash
-make build TARGET=base REGISTRY_HOST=registry.example.com
-make build TARGET=base REGISTRY=registry.example.com/team
+make load VERSION=v1.0.0
 ```
 
-## Debug
+## 🏃 Usage
 
-Interactive shell:
+Run the built image using Docker:
 
 ```bash
-docker run --rm -it ghcr.io/kiddingbaby/ansible-ee-base:1.0.0 bash
+# Run ansible --version
+docker run --rm ghcr.io/kiddingbaby/ansible-ee-base:dev-xxxxxxx ansible --version
+
+# Run an interactive shell
+docker run --rm -it ghcr.io/kiddingbaby/ansible-ee-k3s:dev-xxxxxxx bash
 ```
 
-## CI/CD
-
-- CI uses the exact same bake definition as local builds.
-- Image version is driven by the repository root `VERSION` file.
-
-## Maintainer Notes
-
-- Keep all build logic (tags, platforms, args) in `docker-bake.hcl`.
-- Avoid duplicating build arguments or logic in Makefile/CI.
-
-## License
+## 📝 License
 
 MIT
