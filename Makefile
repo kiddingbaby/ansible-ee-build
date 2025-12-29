@@ -1,3 +1,6 @@
+# This Makefile is only for local development and testing.
+# CI/CD uses GitHub Actions and Docker Buildx Bake directly.
+
 VERSION  	?= dev-$(shell git rev-parse --short=7 HEAD)
 GITHUB_SHA  ?= $(shell git rev-parse HEAD)
 TARGETS  	?= base
@@ -5,13 +8,13 @@ TARGETS  	?= base
 .PHONY: print build clean
 
 print:
-	VERSION=$(VERSION) GITHUB_SHA=$(GITHUB_SHA) docker buildx bake \
+	docker buildx bake \
 		-f docker-bake.hcl \
 		--print \
 		$(TARGETS)
 
 build:
-	VERSION=$(VERSION) GITHUB_SHA=$(GITHUB_SHA) docker buildx bake \
+	docker buildx bake \
 		-f docker-bake.hcl \
 		--load \
 		$(TARGETS)

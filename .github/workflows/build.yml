@@ -15,12 +15,9 @@ jobs:
       contents: read
       packages: write
 
-    env:
-      REGISTRY: ghcr.io/kiddingbaby
-
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -28,21 +25,11 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Compute VERSION
-        id: compute_version
-        run: |
-          if [[ "${GITHUB_REF}" =~ refs/tags/(.*) ]]; then
-            VERSION="${BASH_REMATCH[1]}"
-          else
-            VERSION="dev-$(git rev-parse --short=7 HEAD)"
-          fi
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-
       - name: Login to GHCR
         if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
+          registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
@@ -52,33 +39,68 @@ jobs:
         with:
           list-files: json
           filters: |
+            ci:
+              - '.github/workflows/**'
+              - 'docker-bake.hcl'
             images:
               - 'images/**'
+
+      - name: Compute TAG
+        id: compute_tag
+        run: |
+          set -e
+          SHA="$(git rev-parse --short=7 HEAD)"
+
+          IMAGES=("base" "k3s")
+          for name in "${IMAGES[@]}"; do
+            VERSION_FILE="images/${name}/VERSION"
+            if [[ -f "$VERSION_FILE" ]]; then
+              TAG=$(cat "$VERSION_FILE")
+              [[ "$TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit 1
+            else
+              TAG="dev-${SHA}"
+            fi
+
+            echo "IMAGE_${name^^}_TAG=$TAG"
+            echo "IMAGE_${name^^}_TAG=$TAG" >> $GITHUB_OUTPUT
+          done
 
       - name: Set targets
         id: set_targets
         run: |
-          # Extract unique directory names from changed files under images/
+          if [[ "${{ steps.changes.outputs.ci }}" == "true" ]]; then
+            echo "targets=all" >> $GITHUB_OUTPUT
+            echo "Reason: CI or bake definition changed"
+            exit 0
+          fi
+
+          if [[ "${{ steps.changes.outputs.images }}" != "true" ]]; then
+            echo "targets=none" >> $GITHUB_OUTPUT
+            echo "No image changes detected"
+            exit 0
+          fi
+
           TARGETS=$(jq -r '[.[] | split("/")[1]] | unique | join(",")' <<< '${{ steps.changes.outputs.images_files }}')
 
           if [[ ",$TARGETS," == *",base,"* ]]; then
             echo "targets=all" >> $GITHUB_OUTPUT
-          elif [[ -z "$TARGETS" ]]; then
-            echo "targets=none" >> $GITHUB_OUTPUT
-          else
-            echo "targets=$TARGETS" >> $GITHUB_OUTPUT
+            echo "Reason: base image changed"
+            exit 0
           fi
+
+          echo "targets=$TARGETS" >> $GITHUB_OUTPUT
+          echo "Incremental targets: $TARGETS"
 
       - name: Build and Bake
         if: steps.set_targets.outputs.targets != 'none'
         uses: docker/bake-action@v6
-        env:
-          VERSION: ${{ steps.compute_version.outputs.version }}
-          GITHUB_SHA: ${{ github.sha }}
         with:
           files: docker-bake.hcl
           targets: ${{ steps.set_targets.outputs.targets }}
           push: false
           set: |
+            IMAGE_BASE_TAG=${{ steps.compute_tag.outputs.IMAGE_BASE_TAG }}
+            IMAGE_K3S_TAG=${{ steps.compute_tag.outputs.IMAGE_K3S_TAG }}
+            GITHUB_SHA: ${{ github.sha }}
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
