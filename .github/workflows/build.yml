@@ -94,13 +94,14 @@ jobs:
       - name: Build and Bake
         if: steps.set_targets.outputs.targets != 'none'
         uses: docker/bake-action@v6
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+          IMAGE_BASE_TAG: ${{ steps.compute_tag.outputs.IMAGE_BASE_TAG }}
+          IMAGE_K3S_TAG: ${{ steps.compute_tag.outputs.IMAGE_K3S_TAG }}
         with:
           files: docker-bake.hcl
           targets: ${{ steps.set_targets.outputs.targets }}
           push: false
           set: |
-            IMAGE_BASE_TAG=${{ steps.compute_tag.outputs.IMAGE_BASE_TAG }}
-            IMAGE_K3S_TAG=${{ steps.compute_tag.outputs.IMAGE_K3S_TAG }}
-            GITHUB_SHA: ${{ github.sha }}
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
