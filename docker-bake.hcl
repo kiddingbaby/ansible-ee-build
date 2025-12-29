@@ -5,7 +5,7 @@ variable "IMAGE_K3S_TAG" { default = "dev" }
 variable "REGISTRY" { default = "ghcr.io/kiddingbaby" }
 variable "DEBIAN_MIRROR" { default = "mirrors.tuna.tsinghua.edu.cn" }
 variable "PIP_MIRROR" { default = "https://pypi.tuna.tsinghua.edu.cn/simple/" }
-variable "PLATFORMS" { default = "linux/amd64" }
+variable "PLATFORMS" { default = "linux/amd64,linux/arm64" }
 
 target "_common" {
   platforms = split(",", "${PLATFORMS}")
