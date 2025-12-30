@@ -1,0 +1,26 @@
+name: "Compute Image Tags"
+description: "Compute version tags for all images based on VERSION files and git context"
+inputs:
+  event_name:
+    description: "GitHub event name (push, pull_request)"
+    required: true
+    default: "push"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Generate Environment Variables
+      shell: bash
+      run: |
+        # 根据事件类型决定模式
+        MODE="auto"
+        if [[ "${{ inputs.event_name }}" == "pull_request" ]]; then
+          MODE="pr"
+        fi
+
+        echo "::group::Version Computation Log"
+        # 调用共享脚本生成环境变量
+           echo "::error::scripts/generate-build-env.sh not found"
+           exit 1
+        fi
+        echo "::endgroup::"

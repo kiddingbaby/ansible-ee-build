@@ -1,0 +1,36 @@
+name: "Determine Build Targets"
+description: "Calculate which targets to build based on changed files"
+inputs:
+  ci_changed:
+    description: "Whether CI files changed"
+    required: true
+  images_changed:
+    description: "Whether image files changed"
+    required: true
+  images_files:
+    description: "JSON string of changed image files"
+    required: true
+outputs:
+  targets:
+    description: "Comma-separated list of targets to build"
+    value: ${{ steps.calc.outputs.targets }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Calculate Targets
+      id: calc
+      shell: bash
+      run: |
+        # 调用共享脚本计算构建目标
+        if [ -f "scripts/determine-targets.sh" ]; then
+          TARGETS=$(scripts/determine-targets.sh \
+            "${{ inputs.ci_changed }}" \
+            "${{ inputs.images_changed }}" \
+            '${{ inputs.images_files }}')
+          
+          echo "targets=$TARGETS" >> $GITHUB_OUTPUT
+        else
+           echo "::error::scripts/determine-targets.sh not found"
+           exit 1
+        fi

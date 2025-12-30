@@ -1,7 +1,6 @@
 variable "GITHUB_SHA" { default = "unknown" }
 variable "IMAGE_BASE_TAG" { default = "dev" }
 variable "IMAGE_K3S_TAG" { default = "dev" }
-
 variable "REGISTRY" { default = "ghcr.io/kiddingbaby" }
 variable "DEBIAN_MIRROR" { default = "mirrors.tuna.tsinghua.edu.cn" }
 variable "PIP_MIRROR" { default = "https://pypi.tuna.tsinghua.edu.cn/simple/" }

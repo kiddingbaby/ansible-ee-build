@@ -17,27 +17,36 @@ A professional, reproducible build system for Ansible Execution Environments (EE
 
 ## 📦 Image Hierarchy
 
-| Image          | Description                                                                                              | Context         |
-| -------------- | -------------------------------------------------------------------------------------------------------- | --------------- |
-| `ansible-base` | The foundation. Contains Python 3.11, Ansible Core 2.17, Ansible Runner, and essential system libraries. | `./images/base` |
-| `ansible-k3s`  | Extends `base`. Adds Kubernetes tools (`kubectl`, `helm`) and K3s-specific Ansible collections.          | `./images/k3s`  |
+| Image              | Description                                                                         | Context             |
+| ------------------ | ----------------------------------------------------------------------------------- | ------------------- |
+| `ansible-base`     | Foundation. Python 3.11, Ansible Core 2.17, Ansible Runner, system libraries.       | `./images/base`     |
+| `ansible-k3s`      | Extends `base`. Adds Kubernetes tools (`kubectl`, `helm`), K3s Ansible collections. | `./images/k3s`      |
+| `ansible-harbor`   | Harbor registry integration (experimental).                                         | `./images/harbor`   |
+| `ansible-keycloak` | Keycloak authentication integration (experimental).                                 | `./images/keycloak` |
 
 ## 📂 Project Structure
 
 ```text
 .
 ├── images/
-│   ├── base/      # Base image definition
+│   ├── base/              # Base image (required)
+│   │   ├── VERSION        # Version file (or dev-<sha>)
 │   │   ├── Dockerfile
-│   │   ├── requirements.txt  # Python dependencies
-│   │   └── ansible.cfg
-│   └── k3s/       # K3s extension image
-│       ├── Dockerfile
-│       ├── requirements.txt  # K3s specific Python deps
-│       └── requirements.yml  # Ansible collections
-├── docker-bake.hcl       # BuildKit HCL definition
-├── Makefile              # User interface wrapper
-└── .github/              # CI/CD workflows
+│   │   ├── requirements.txt
+│   │   ├── ansible.cfg
+│   │   └── tests/         # Test suite
+│   │       └── smoke-test/
+│   ├── k3s/               # K3s extension (extends base)
+│   │   ├── VERSION
+│   │   ├── Dockerfile
+│   │   ├── requirements.txt
+│   │   └── requirements.yml
+│   ├── harbor/            # Harbor extension (experimental)
+│   └── keycloak/          # Keycloak extension (experimental)
+├── docker-bake.hcl        # BuildKit HCL definition
+├── Makefile               # Build wrapper
+├── test.sh                # Dynamic version scanner
+└── .github/workflows/     # GitHub Actions (auto-detect changes)
 ```
 
 ## 🛠️ Quick Start
@@ -80,33 +89,108 @@ Remove the generated images from local Docker.
 make clean
 ```
 
-## ⚙️ Configuration
+## ⚙️ Versioning
 
-You can override default variables:
+**Per-Image Versions** (via `VERSION` file)
+
+- Each image can have its own `images/<name>/VERSION` file containing a version string.
+- If file exists: used as tag (e.g., `ansible-base:1.0.0`).
+- If missing: falls back to `dev-<short-git-sha>`.
+
+### Build Variables
 
 | Variable   | Default               | Description                                            |
 | :--------- | :-------------------- | :----------------------------------------------------- |
-| `VERSION`  | `dev-<short-sha>`     | The tag version for the images.                        |
-| `REGISTRY` | `ghcr.io/kiddingbaby` | The container registry to push to.                     |
-| `TARGETS`  | `all`                 | The bake target(s) to build (`base`, `k3s`, or `all`). |
+| `VERSION`  | `dev-<short-sha>`     | Global version (can be overridden per image).          |
+| `REGISTRY` | `ghcr.io/kiddingbaby` | Container registry for push.                           |
+| `TARGETS`  | `all`                 | Targets to build: `base`, `k3s`, `harbor`, `keycloak`. |
 
-Example:
+Examples:
 
 ```bash
-make load VERSION=v1.0.0
+# Build locally with default versions from VERSION files or git SHA
+make build
+
+# Build with custom version
+make build VERSION=1.2.0
+
+# Build only base
+make build TARGETS=base
 ```
 
 ## 🏃 Usage
 
-Run the built image using Docker:
+### Build
 
 ```bash
-# Run ansible --version
-# Run ansible --version
-docker run --rm ghcr.io/kiddingbaby/ansible-base:dev-xxxxxxx ansible --version
+# Build all images locally
+make load
 
-# Run an interactive shell
-docker run --rm -it ghcr.io/kiddingbaby/ansible-k3s:dev-xxxxxxx bash
+# Build specific image
+make load TARGETS=base
+```
+
+### Run and Test
+
+**Test base image** (see [images/base/tests/smoke-test](./images/base/tests/smoke-test)):
+
+```bash
+make build VERSION=1.0.0 TARGETS=base
+docker run --rm \
+  -v $(pwd)/images/base/tests/smoke-test/project:/runner/project:ro \
+  ghcr.io/kiddingbaby/ansible-base:1.0.0 \
+  ansible-runner run /runner -p site.yml
+```
+
+**Interactive shell**:
+
+```bash
+docker run -it ghcr.io/kiddingbaby/ansible-base:1.0.0 bash
+```
+
+**Run playbook** (mount your playbooks):
+
+```bash
+docker run -it --rm \
+  -v $(pwd)/playbooks:/runner/project:ro \
+  ghcr.io/kiddingbaby/ansible-base:1.0.0 \
+  ansible-runner run /runner -p site.yml
+```
+
+**K3s image** (extends base):
+
+```bash
+docker run -it ghcr.io/kiddingbaby/ansible-k3s:1.0.0 bash
+```
+
+## 🔄 CI/CD Workflow
+
+- **Auto-detection**: GitHub Actions detects which `images/` subdirs changed.
+- **Version computation**: Reads per-image `VERSION` file or generates `dev-<sha>` tag.
+- **Smart build**: Only rebuilds affected images and their dependents (e.g., changing `base` triggers rebuild of `k3s`).
+- **Registry push**: On tag push, builds and publishes to GHCR (if not PR).
+
+## 🛠️ Development
+
+### Extending the Build
+
+To add a new image variant:
+
+1. Create `images/<name>/` with `Dockerfile`, `requirements.txt`, and optionally `requirements.yml`.
+2. (Optional) Add `images/<name>/VERSION` file with semantic version.
+3. Update `docker-bake.hcl` if the image needs custom build args or cache logic.
+4. GitHub Actions will auto-detect and include it.
+
+### Testing
+
+Run the smoke test suite:
+
+```bash
+make build VERSION=1.0.0 TARGETS=base
+docker run --rm \
+  -v $(pwd)/images/base/tests/smoke-test/project:/runner/project:ro \
+  ghcr.io/kiddingbaby/ansible-base:1.0.0 \
+  ansible-runner run /runner -p site.yml
 ```
 
 ## 📝 License

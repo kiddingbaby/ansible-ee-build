@@ -17,27 +17,36 @@
 
 ## 📦 镜像层级
 
-| 镜像           | 描述                                                                                                  | 目录上下文      |
-| -------------- | ----------------------------------------------------------------------------------------------------- | --------------- |
-| `ansible-base` | 基础镜像。包含 Python 3.11, Ansible Core 2.17, Ansible Runner 及基础系统库。                          | `./images/base` |
-| `ansible-k3s`  | 扩展镜像。基于 `base`，增加了 Kubernetes 工具 (`kubectl`, `helm`) 和 K3s 相关的 Ansible collections。 | `./images/k3s`  |
+| 镜像               | 描述                                                                    | 目录上下文          |
+| ------------------ | ----------------------------------------------------------------------- | ------------------- |
+| `ansible-base`     | 基础镜像。Python 3.11、Ansible Core 2.17、Ansible Runner 及系统库。     | `./images/base`     |
+| `ansible-k3s`      | K3s 扩展。基于 `base`，增加 Kubernetes 工具和 K3s Ansible collections。 | `./images/k3s`      |
+| `ansible-harbor`   | Harbor 注册表集成（实验性）。                                           | `./images/harbor`   |
+| `ansible-keycloak` | Keycloak 身份认证集成（实验性）。                                       | `./images/keycloak` |
 
 ## 📂 项目结构
 
 ```text
 .
 ├── images/
-│   ├── base/      # 基础镜像定义
+│   ├── base/              # 基础镜像（必需）
+│   │   ├── VERSION        # 版本文件（若无则用 dev-<sha>）
 │   │   ├── Dockerfile
-│   │   ├── requirements.txt  # Python 依赖
-│   │   └── ansible.cfg
-│   └── k3s/       # K3s 扩展镜像
-│       ├── Dockerfile
-│       ├── requirements.txt  # K3s 特有 Python 依赖
-│       └── requirements.yml  # Ansible collections
-├── docker-bake.hcl       # BuildKit HCL 定义文件
-├── Makefile              # 用户操作入口 (Wrapper)
-└── .github/              # CI/CD 工作流
+│   │   ├── requirements.txt
+│   │   ├── ansible.cfg
+│   │   └── tests/         # 测试套件
+│   │       └── smoke-test/
+│   ├── k3s/               # K3s 扩展（依赖 base）
+│   │   ├── VERSION
+│   │   ├── Dockerfile
+│   │   ├── requirements.txt
+│   │   └── requirements.yml
+│   ├── harbor/            # Harbor 扩展（实验性）
+│   └── keycloak/          # Keycloak 扩展（实验性）
+├── docker-bake.hcl        # BuildKit HCL 定义
+├── Makefile               # 构建封装
+├── test.sh                # 动态版本扫描器
+└── .github/workflows/     # GitHub Actions（自动检测变更）
 ```
 
 ## 🛠️ 快速开始
@@ -80,32 +89,108 @@ make load TARGETS=k3s
 make clean
 ```
 
-## ⚙️ 配置
+## ⚙️ 版本管理
 
-你可以覆盖默认变量：
+**单镜像版本**（通过 `VERSION` 文件）
 
-| 变量       | 默认值                | 描述                                           |
-| :--------- | :-------------------- | :--------------------------------------------- |
-| `VERSION`  | `dev-<short-sha>`     | 镜像的版本标签。                               |
-| `REGISTRY` | `ghcr.io/kiddingbaby` | 推送的目标镜像仓库。                           |
-| `TARGETS`  | `all`                 | 要构建的 bake 目标 (`base`, `k3s`, 或 `all`)。 |
+- 每个镜像可在 `images/<name>/VERSION` 文件中定义版本号。
+- 若文件存在：使用文件内容作为标签（如 `ansible-base:1.0.0`）。
+- 若文件不存在：自动回退到 `dev-<短-git-sha>`。
+
+### 构建变量
+
+| 变量       | 默认值                | 描述                                                |
+| :--------- | :-------------------- | :-------------------------------------------------- |
+| `VERSION`  | `dev-<short-sha>`     | 全局版本（可被单镜像版本覆盖）。                    |
+| `REGISTRY` | `ghcr.io/kiddingbaby` | 推送的目标镜像仓库。                                |
+| `TARGETS`  | `all`                 | 要构建的目标：`base`、`k3s`、`harbor`、`keycloak`。 |
 
 示例：
 
 ```bash
-make load VERSION=v1.0.0
+# 使用 VERSION 文件或 git SHA 的默认版本构建
+make build
+
+# 指定全局版本
+make build VERSION=1.2.0
+
+# 仅构建 base
+make build TARGETS=base
 ```
 
 ## 🏃 使用方法
 
-使用 Docker 运行构建好的镜像：
+### 构建
 
 ```bash
-# 查看 ansible 版本
-docker run --rm ghcr.io/kiddingbaby/ansible-base:dev-xxxxxxx ansible --version
+# 本地构建所有镜像
+make load
 
-# 运行交互式 Shell
-docker run --rm -it ghcr.io/kiddingbaby/ansible-k3s:dev-xxxxxxx bash
+# 构建指定镜像
+make load TARGETS=base
+```
+
+### 运行和测试
+
+**测试 base 镜像**（见 [images/base/tests/smoke-test](./images/base/tests/smoke-test)）：
+
+```bash
+make build VERSION=1.0.0 TARGETS=base
+docker run --rm \
+  -v $(pwd)/images/base/tests/smoke-test/project:/runner/project:ro \
+  ghcr.io/kiddingbaby/ansible-base:1.0.0 \
+  ansible-runner run /runner -p site.yml
+```
+
+**交互式 shell**：
+
+```bash
+docker run -it ghcr.io/kiddingbaby/ansible-base:1.0.0 bash
+```
+
+**运行 Playbook**（挂载本地 Playbook）：
+
+```bash
+docker run -it --rm \
+  -v $(pwd)/playbooks:/runner/project:ro \
+  ghcr.io/kiddingbaby/ansible-base:1.0.0 \
+  ansible-runner run /runner -p site.yml
+```
+
+**K3s 镜像**（扩展 base）：
+
+```bash
+docker run -it ghcr.io/kiddingbaby/ansible-k3s:1.0.0 bash
+```
+
+## 🔄 CI/CD 工作流
+
+- **自动检测**：GitHub Actions 自动检测 `images/` 子目录变更。
+- **版本计算**：读取单镜像 `VERSION` 文件或生成 `dev-<sha>` 标签。
+- **智能构建**：仅重建受影响的镜像及其依赖（如修改 `base` 会触发 `k3s` 重构）。
+- **仓库推送**：标签推送时自动构建并发布至 GHCR（非 PR 时）。
+
+## 🛠️ 开发指南
+
+### 扩展构建
+
+添加新镜像变体：
+
+1. 创建 `images/<name>/` 目录，包含 `Dockerfile` 和 `requirements.txt`，可选 `requirements.yml`。
+2. （可选）创建 `images/<name>/VERSION` 文件写入语义版本号。
+3. 若需特殊构建参数，更新 `docker-bake.hcl`。
+4. GitHub Actions 会自动检测并包含该镜像。
+
+### 测试
+
+运行烟雾测试套件：
+
+```bash
+make build VERSION=1.0.0 TARGETS=base
+docker run --rm \
+  -v $(pwd)/images/base/tests/smoke-test/project:/runner/project:ro \
+  ghcr.io/kiddingbaby/ansible-base:1.0.0 \
+  ansible-runner run /runner -p site.yml
 ```
 
 ## 📝 许可证

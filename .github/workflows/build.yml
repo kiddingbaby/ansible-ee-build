@@ -2,10 +2,10 @@ name: Build Ansible EE Images
 
 on:
   push:
-    branches: ["main", "master"]
+    branches: ["main", "master", "release/*"]
     tags: ["v*"]
   pull_request:
-    branches: ["main", "master"]
+    branches: ["main", "master", "release/*"]
   workflow_dispatch:
 
 jobs:
@@ -46,61 +46,26 @@ jobs:
               - 'images/**'
 
       - name: Compute TAG
-        id: compute_tag
-        run: |
-          set -e
-          SHA="$(git rev-parse --short=7 HEAD)"
+        uses: ./.github/actions/compute-tags
+        with:
+          event_name: ${{ github.event_name }}
 
-          IMAGES=("base" "k3s")
-          for name in "${IMAGES[@]}"; do
-            VERSION_FILE="images/${name}/VERSION"
-            if [[ -f "$VERSION_FILE" ]]; then
-              TAG=$(cat "$VERSION_FILE")
-              [[ "$TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit 1
-            else
-              TAG="dev-${SHA}"
-            fi
-
-            echo "IMAGE_${name^^}_TAG=$TAG"
-            echo "IMAGE_${name^^}_TAG=$TAG" >> $GITHUB_OUTPUT
-          done
-
-      - name: Set targets
-        id: set_targets
-        run: |
-          if [[ "${{ steps.changes.outputs.ci }}" == "true" ]]; then
-            echo "targets=all" >> $GITHUB_OUTPUT
-            echo "Reason: CI or bake definition changed"
-            exit 0
-          fi
-
-          if [[ "${{ steps.changes.outputs.images }}" != "true" ]]; then
-            echo "targets=none" >> $GITHUB_OUTPUT
-            echo "No image changes detected"
-            exit 0
-          fi
-
-          TARGETS=$(jq -r '[.[] | split("/")[1]] | unique | join(",")' <<< '${{ steps.changes.outputs.images_files }}')
-
-          if [[ ",$TARGETS," == *",base,"* ]]; then
-            echo "targets=all" >> $GITHUB_OUTPUT
-            echo "Reason: base image changed"
-            exit 0
-          fi
-
-          echo "targets=$TARGETS" >> $GITHUB_OUTPUT
-          echo "Incremental targets: $TARGETS"
+      - name: Determine Build Targets
+        id: determine_targets
+        uses: ./.github/actions/determine-targets
+        with:
+          ci_changed: ${{ steps.changes.outputs.ci }}
+          images_changed: ${{ steps.changes.outputs.images }}
+          images_files: ${{ steps.changes.outputs.images_files }}
 
       - name: Build and Bake
-        if: steps.set_targets.outputs.targets != 'none'
+        if: steps.determine_targets.outputs.targets != 'none'
         uses: docker/bake-action@v6
         env:
           GITHUB_SHA: ${{ github.sha }}
-          IMAGE_BASE_TAG: ${{ steps.compute_tag.outputs.IMAGE_BASE_TAG }}
-          IMAGE_K3S_TAG: ${{ steps.compute_tag.outputs.IMAGE_K3S_TAG }}
         with:
           files: docker-bake.hcl
-          targets: ${{ steps.set_targets.outputs.targets }}
+          targets: ${{ steps.determine_targets.outputs.targets }}
           push: false
           set: |
             *.cache-from=type=gha
