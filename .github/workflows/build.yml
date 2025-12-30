@@ -9,12 +9,12 @@ on:
   workflow_dispatch:
     inputs:
       push_image:
-        description: 'Push images to registry'
+        description: "Push images to registry"
         required: true
         default: false
         type: boolean
       force_build_all:
-        description: 'Force build all targets'
+        description: "Force build all targets"
         required: true
         default: false
         type: boolean
