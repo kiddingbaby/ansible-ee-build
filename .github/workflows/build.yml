@@ -7,6 +7,17 @@ on:
   pull_request:
     branches: ["main", "master", "release/*"]
   workflow_dispatch:
+    inputs:
+      push_image:
+        description: 'Push images to registry'
+        required: true
+        default: false
+        type: boolean
+      force_build_all:
+        description: 'Force build all targets'
+        required: true
+        default: false
+        type: boolean
 
 jobs:
   build:
@@ -54,7 +65,7 @@ jobs:
         id: determine_targets
         uses: ./.github/actions/determine-targets
         with:
-          ci_changed: ${{ steps.changes.outputs.ci }}
+          ci_changed: ${{ steps.changes.outputs.ci == 'true' || inputs.force_build_all == true }}
           images_changed: ${{ steps.changes.outputs.images }}
           images_files: ${{ steps.changes.outputs.images_files }}
 
@@ -66,7 +77,7 @@ jobs:
         with:
           files: docker-bake.hcl
           targets: ${{ steps.determine_targets.outputs.targets }}
-          push: false
+          push: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.push_image == true) }}
           set: |
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
