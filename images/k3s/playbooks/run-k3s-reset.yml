@@ -1,0 +1,19 @@
+---
+# run-k3s-reset.yml — wrapper to run upstream k3s reset playbook with prechecks
+
+- name: Preflight checks for K3s reset
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: Ensure server or agent groups exist
+      assert:
+        that:
+          - "(groups['server'] is defined and groups['server'] | length > 0) or (groups['agent'] is defined and groups['agent'] | length > 0)"
+        fail_msg: "No hosts defined in 'server' or 'agent' groups; check inventory."
+
+    - name: Warn if running reset in production (manual confirmation recommended)
+      debug:
+        msg: "Reset will remove k3s state on hosts — ensure this is intended."
+
+- import_playbook: k3s.orchestration.reset

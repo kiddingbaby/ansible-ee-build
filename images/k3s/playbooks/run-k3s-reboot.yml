@@ -1,0 +1,19 @@
+---
+# run-k3s-reboot.yml — wrapper to run upstream k3s reboot playbook with prechecks
+
+- name: Preflight checks for K3s reboot
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: Ensure at least one host exists in server or agent
+      assert:
+        that:
+          - "(groups['server'] is defined and groups['server'] | length > 0) or (groups['agent'] is defined and groups['agent'] | length > 0)"
+        fail_msg: "No hosts defined; check inventory."
+
+    - name: Inform about reboot behavior
+      debug:
+        msg: "This will reboot target hosts; ensure maintenance window and health checks."
+
+- import_playbook: k3s.orchestration.reboot
