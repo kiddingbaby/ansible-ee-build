@@ -1,9 +1,10 @@
 {
     "name": "Ansible EE K3s",
-    "build": {
-        "dockerfile": "../Dockerfile",
-        "context": ".."
-    },
+    // "build": {
+    //     "dockerfile": "../Dockerfile",
+    //     "context": ".."
+    // },
+    "image": "ghcr.io/kiddingbaby/ansible-k3s:dev",
     "runArgs": [
         "--network=host"
     ],

@@ -1,9 +1,10 @@
 {
     "name": "Ansible EE Base",
-    "build": {
-        "dockerfile": "../Dockerfile",
-        "context": ".."
-    },
+    // "build": {
+    //     "dockerfile": "../Dockerfile",
+    //     "context": ".."
+    // },
+    "image": "ghcr.io/kiddingbaby/ansible-base:dev",
     "runArgs": [
         "--network=host"
     ],
