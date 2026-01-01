@@ -22,7 +22,10 @@
         }
     },
     "mounts": [
-        "source=/tmp/ssh-agent.sock,target=/ssh-agent,type=bind"
+        "source=/tmp/ssh-agent.sock,target=/ssh-agent,type=bind",
+        "source=${localWorkspaceFolder}/tests/smoke-test/inventory,target=/runner/inventory,type=bind,consistency=cached",
+        "source=${localWorkspaceFolder}/tests/smoke-test/project,target=/runner/project,type=bind,consistency=cached",
+        "source=${localWorkspaceFolder}/tests/smoke-test/offline,target=/runner/offline,type=bind,consistency=cached"
     ],
     "remoteEnv": {
         "SSH_AUTH_SOCK": "/ssh-agent"

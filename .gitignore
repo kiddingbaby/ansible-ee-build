@@ -52,7 +52,7 @@ secrets.yml
 *.tar.zst
 
 # Large Resources
-images/k3s/resources/**
+**/offline/**
 .docker/
 
 # Temporary / Cache
