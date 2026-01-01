@@ -47,7 +47,6 @@ FROM python:3.11-slim-bookworm
 ARG DEBIAN_MIRROR
 
 ENV PATH="/opt/venv/bin:$PATH" \
-    ANSIBLE_CONFIG=/ansible/ansible.cfg \
     LANG=C.UTF-8 \
     LC_ALL=C.UTF-8 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -70,12 +69,12 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 
 COPY --from=builder /opt/venv /opt/venv
 
-WORKDIR /ansible
-COPY ansible.cfg /ansible/ansible.cfg
+WORKDIR /runner
+COPY ansible.cfg /etc/ansible/ansible.cfg
 
 RUN useradd -m -s /bin/bash ansible \
- && mkdir -p /runner \
- && chown -R ansible:ansible /opt/venv /ansible /runner
+ && mkdir -p /runner/project /runner/inventory /runner/env /runner/artifacts /runner/offline \
+ && chown -R ansible:ansible /opt/venv /runner
 
 USER ansible
 
