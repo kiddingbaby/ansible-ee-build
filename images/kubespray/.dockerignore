@@ -1,0 +1,27 @@
+# Source control
+.git
+.gitignore
+
+# Python / Build artifacts
+.venv
+venv/
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+dist
+build
+*.tar
+*.tgz
+
+# Node / JS
+node_modules
+
+# IDE / editor
+.vscode/
+*.swp
+.DS_Store
+
+# Local / sensitive files
+.env
+*.vault
