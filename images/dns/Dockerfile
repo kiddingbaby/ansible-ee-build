@@ -5,11 +5,11 @@ ARG PIP_MIRROR
 
 USER root
 
-# Copy BIND9 collection source from build context
-COPY --from=ansible-bind9 . /tmp/ansible-bind9/
+# Copy infra.dns collection from repository
+COPY ansible_collections/infra/dns /tmp/ansible-bind9/
 
 # DNS/BIND9 Ansible collections
-COPY requirements.yml /tmp/requirements.yml
+COPY images/dns/requirements.yml /tmp/requirements.yml
 RUN ansible-galaxy collection install \
       -r /tmp/requirements.yml \
  && rm -rf /tmp/requirements.yml /tmp/ansible-bind9

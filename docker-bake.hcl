@@ -64,13 +64,12 @@ target "k3s" {
 
 target "dns" {
   inherits   = ["_common"]
-  context    = "images/dns"
-  dockerfile = "Dockerfile"
+  context    = "."
+  dockerfile = "images/dns/Dockerfile"
   cache_from = ["type=gha"]
 
   contexts = {
-    base_image    = "target:base"
-    ansible-bind9 = "./ansible_collections/infra/dns"
+    base_image = "target:base"
   }
 
   args = {
