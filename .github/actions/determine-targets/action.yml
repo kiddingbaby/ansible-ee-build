@@ -28,7 +28,7 @@ runs:
             "${{ inputs.ci_changed }}" \
             "${{ inputs.images_changed }}" \
             '${{ inputs.images_files }}')
-          
+
           echo "targets=$TARGETS" >> $GITHUB_OUTPUT
         else
            echo "::error::scripts/determine-targets.sh not found"
