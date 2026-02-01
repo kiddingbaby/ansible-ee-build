@@ -1,0 +1,44 @@
+// BIND9 named.conf.options
+// Managed by Ansible
+
+options {
+    directory "/var/cache/bind";
+
+    listen-on port 53 {
+        localhost;
+{% for addr in bind9_listen_on %}
+        {{ addr }};
+{% endfor %}
+    };
+
+    listen-on-v6 {
+{% for addr in bind9_listen_on_v6 %}
+        {{ addr }};
+{% endfor %}
+    };
+
+    dnssec-validation {{ bind9_dnssec_validation }};
+    auth-nxdomain no;
+
+    recursion yes;
+    allow-recursion {
+{% for item in bind9_allow_recursion %}
+        {{ item }};
+{% endfor %}
+    };
+
+    allow-query {
+{% for item in bind9_allow_query %}
+        {{ item }};
+{% endfor %}
+    };
+
+    allow-transfer { none; };
+
+    forward {{ bind9_forward }};
+    forwarders {
+{% for fwd in bind9_forwarders %}
+        {{ fwd.address }} port {{ fwd.port }};
+{% endfor %}
+    };
+};

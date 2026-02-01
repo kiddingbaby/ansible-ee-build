@@ -1,0 +1,13 @@
+// Local zone configuration
+// Managed by Ansible
+
+{% for zone in bind9_zones %}
+zone "{{ zone.name }}" IN {
+    type {{ zone.type | default('master') }};
+    file "{{ zone.file }}";
+{% if zone.allow_transfer is defined %}
+    allow-transfer { {{ zone.allow_transfer | join('; ') }}; };
+{% endif %}
+};
+
+{% endfor %}

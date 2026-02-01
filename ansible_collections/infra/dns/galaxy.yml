@@ -1,0 +1,15 @@
+namespace: infra
+name: dns
+version: 1.0.0
+readme: README.md
+authors:
+  - kiddingbaby
+description: Production-ready DNS server deployment
+license:
+  - Apache-2.0
+tags:
+  - dns
+  - bind9
+  - networking
+  - infrastructure
+repository: https://github.com/kiddingbaby/ansible-dns

@@ -1,0 +1,21 @@
+---
+# Smoke test for BIND9 deployment
+
+- name: Preflight checks for BIND9 deployment
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: Ensure dns_servers group exists
+      assert:
+        that:
+          - "groups['dns_servers'] is defined"
+          - "groups['dns_servers'] | length > 0"
+        fail_msg: "No hosts defined in 'dns_servers' group; check inventory."
+
+- name: Deploy DNS stack
+  hosts: dns_servers
+  become: yes
+  roles:
+    - infra.dns.dnscrypt_proxy
+    - infra.dns.bind9

@@ -1,0 +1,6 @@
+---
+- name: Deploy DNSCrypt Proxy
+  hosts: dns_servers
+  become: true
+  roles:
+    - role: infra.dns.dnscrypt_proxy

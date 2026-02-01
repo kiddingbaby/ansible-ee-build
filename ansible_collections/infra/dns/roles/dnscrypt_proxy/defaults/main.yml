@@ -1,0 +1,42 @@
+---
+# DNSCrypt Proxy - Default Variables
+
+# Listening
+dnscrypt_proxy_listen_addresses:
+  - '127.0.0.1:5353'
+
+# Server selection
+dnscrypt_proxy_server_names:
+  - cisco-open-dns
+  - adguard-dns
+  - cloudflare
+  - dns.sb
+  - quad9-dnscrypt-ip4-filter-pri
+  - nextdns
+  - dnsforge.de
+
+# HTTP proxy (optional, for restricted networks)
+dnscrypt_proxy_http_proxy: ""
+
+# Cache settings
+dnscrypt_proxy_cache: true
+dnscrypt_proxy_cache_size: 512
+dnscrypt_proxy_cache_min_ttl: 60
+dnscrypt_proxy_cache_max_ttl: 86400
+
+# Security
+dnscrypt_proxy_require_dnssec: true
+
+# Limits
+dnscrypt_proxy_max_clients: 250
+
+# Logging
+dnscrypt_proxy_log_file: /var/log/dnscrypt-proxy/dnscrypt-proxy.log
+dnscrypt_proxy_query_log: /var/log/dnscrypt-proxy/query.log
+dnscrypt_proxy_nx_log: /var/log/dnscrypt-proxy/nx.log
+
+# Resolver sources
+dnscrypt_proxy_sources_url: https://download.dnscrypt.info/resolvers-list/v2/public-resolvers.md
+dnscrypt_proxy_sources_cache: /var/cache/dnscrypt-proxy/public-resolvers.md
+dnscrypt_proxy_sources_key: RWQf6LRCGA9i53mlYecO4IzT51TGPpvWucNSCh1CBM0QTaLn73Y7GFO3
+dnscrypt_proxy_sources_refresh_delay: 99999

@@ -1,0 +1,157 @@
+---
+# Complete DNS Stack Deployment Playbook
+# Deploys DNSCrypt Proxy + BIND9 in hybrid recursive+authoritative mode
+
+- name: Preflight checks
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: Verify dns_servers group exists
+      ansible.builtin.assert:
+        that:
+          - "groups['dns_servers'] is defined"
+          - "groups['dns_servers'] | length > 0"
+        fail_msg: "No hosts in dns_servers group. Check inventory configuration."
+
+    - name: Display deployment information
+      ansible.builtin.debug:
+        msg: |
+          DNS Stack Deployment Starting
+          ==============================
+          Target hosts: {{ groups['dns_servers'] | join(', ') }}
+          Components:
+            1. DNSCrypt Proxy (encrypted DNS)
+            2. BIND9 (hybrid recursive+authoritative)
+
+          Architecture:
+            Client → BIND9 (127.0.0.1:53) → DNSCrypt Proxy (127.0.2.1:53) → Encrypted DNS
+
+- name: Deploy DNSCrypt Proxy
+  hosts: dns_servers
+  become: yes
+  gather_facts: yes
+  tasks:
+    - name: Display target host information
+      ansible.builtin.debug:
+        msg: |
+          Deploying DNSCrypt Proxy on: {{ ansible_hostname }}
+          IP Address: {{ ansible_default_ipv4.address | default('N/A') }}
+          OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
+
+    - name: Deploy DNSCrypt Proxy role
+      ansible.builtin.include_role:
+        name: infra.dns.dnscrypt_proxy
+
+    - name: DNSCrypt Proxy deployment complete
+      ansible.builtin.debug:
+        msg: "DNSCrypt Proxy deployed successfully on {{ ansible_hostname }}"
+
+- name: Deploy BIND9 with DNSCrypt integration
+  hosts: dns_servers
+  become: yes
+  gather_facts: yes
+  tasks:
+    - name: Display BIND9 deployment info
+      ansible.builtin.debug:
+        msg: |
+          Deploying BIND9 on: {{ ansible_hostname }}
+          Configuration source: {{ bind9_custom_config_source | default('template') }}
+          Forwarders: {{ bind9_forwarders | default(['none']) | join(', ') }}
+
+    - name: Deploy BIND9 role
+      ansible.builtin.include_role:
+        name: infra.dns.bind9
+
+    - name: BIND9 deployment complete
+      ansible.builtin.debug:
+        msg: "BIND9 deployed successfully on {{ ansible_hostname }}"
+
+- name: Post-deployment validation
+  hosts: dns_servers
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: Wait for BIND9 to be ready
+      ansible.builtin.wait_for:
+        port: 53
+        host: 127.0.0.1
+        timeout: 30
+        msg: "BIND9 failed to start listening on port 53"
+
+    - name: Wait for DNSCrypt Proxy to be ready
+      ansible.builtin.wait_for:
+        port: 53
+        host: 127.0.2.1
+        timeout: 30
+        msg: "DNSCrypt Proxy failed to start listening on 127.0.2.1:53"
+
+    - name: Test recursive DNS query via BIND9
+      ansible.builtin.command: dig @127.0.0.1 +short google.com
+      register: recursive_test
+      changed_when: false
+      failed_when: false
+
+    - name: Display recursive query result
+      ansible.builtin.debug:
+        msg: |
+          Recursive Query Test (via BIND9):
+          Query: google.com
+          Result: {{ 'SUCCESS' if recursive_test.rc == 0 else 'FAILED' }}
+          Response: {{ recursive_test.stdout_lines | default(['No response']) | join(', ') }}
+
+    - name: Test DNSCrypt Proxy directly
+      ansible.builtin.command: dig @127.0.2.1 +short cloudflare.com
+      register: dnscrypt_test
+      changed_when: false
+      failed_when: false
+
+    - name: Display DNSCrypt query result
+      ansible.builtin.debug:
+        msg: |
+          Direct DNSCrypt Query Test:
+          Query: cloudflare.com
+          Result: {{ 'SUCCESS' if dnscrypt_test.rc == 0 else 'FAILED' }}
+          Response: {{ dnscrypt_test.stdout_lines | default(['No response']) | join(', ') }}
+
+    - name: Verify BIND9 service status
+      ansible.builtin.systemd:
+        name: named
+      register: bind9_status
+      check_mode: yes
+
+    - name: Verify DNSCrypt Proxy service status
+      ansible.builtin.systemd:
+        name: dnscrypt-proxy
+      register: dnscrypt_status
+      check_mode: yes
+
+    - name: Final validation report
+      ansible.builtin.debug:
+        msg: |
+          ========================================
+          DNS Stack Deployment Complete!
+          ========================================
+
+          Services Status:
+          - BIND9: {{ bind9_status.status.ActiveState | default('Unknown') }}
+          - DNSCrypt Proxy: {{ dnscrypt_status.status.ActiveState | default('Unknown') }}
+
+          Functionality Tests:
+          - Recursive queries (BIND9): {{ 'WORKING ✓' if recursive_test.rc == 0 else 'FAILED ✗' }}
+          - Encrypted DNS (DNSCrypt): {{ 'WORKING ✓' if dnscrypt_test.rc == 0 else 'FAILED ✗' }}
+
+          DNS Query Flow:
+          Client → BIND9 (127.0.0.1:53) → DNSCrypt Proxy (127.0.2.1:53) → Encrypted Upstreams
+
+          Next Steps:
+          1. Configure clients to use {{ ansible_default_ipv4.address | default('this server') }} as DNS
+          2. Test from client: dig @{{ ansible_default_ipv4.address | default('SERVER_IP') }} google.com
+          3. Monitor logs:
+             - BIND9: journalctl -u named -f
+             - DNSCrypt: journalctl -u dnscrypt-proxy -f
+
+          Troubleshooting:
+          - Check BIND9 config: named-checkconf -z
+          - Check BIND9 logs: tail -f /var/log/named/default.log
+          - Check DNSCrypt logs: tail -f /var/log/dnscrypt-proxy/dnscrypt-proxy.log

@@ -1,0 +1,36 @@
+---
+# Local test to verify collection is working
+- name: Verify kiddingbaby.bind9 collection
+  hosts: localhost
+  connection: local
+  gather_facts: yes
+  tasks:
+    - name: Check if collection is installed
+      ansible.builtin.command: ansible-galaxy collection list kiddingbaby.bind9
+      register: collection_check
+      changed_when: false
+
+    - name: Display collection info
+      ansible.builtin.debug:
+        var: collection_check.stdout_lines
+
+    - name: Verify role files exist
+      ansible.builtin.stat:
+        path: "/usr/share/ansible/collections/ansible_collections/kiddingbaby/bind9/roles/bind9/tasks/{{ item }}"
+      loop:
+        - main.yml
+        - install.yml
+        - configure.yml
+        - deploy_custom_configs.yml
+      register: role_files
+
+    - name: Check all role files exist
+      ansible.builtin.assert:
+        that:
+          - item.stat.exists
+        fail_msg: "Role file {{ item.item }} not found"
+      loop: "{{ role_files.results }}"
+
+    - name: Success message
+      ansible.builtin.debug:
+        msg: "✓ ansible-bind9 collection is properly installed and accessible"

@@ -60,3 +60,5 @@ secrets.yml
 .coverage
 htmlcov/
 .mypy_cache/
+
+.claude/

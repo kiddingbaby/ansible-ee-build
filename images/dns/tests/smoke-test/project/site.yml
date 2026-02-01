@@ -1,0 +1,106 @@
+---
+# DNS Stack Smoke Test
+# Tests DNSCrypt Proxy + BIND9 deployment on 192.168.0.101
+#
+# Architecture:
+#   Client → BIND9 (port 53) → DNSCrypt Proxy (port 5353) → Encrypted DNS
+#
+# Usage:
+#   ansible-runner run /runner -p site.yml
+
+- name: Deploy DNS Stack
+  hosts: dns_servers
+  gather_facts: true
+  tasks:
+    - name: Display target info
+      ansible.builtin.debug:
+        msg: "Deploying DNS stack on {{ ansible_hostname }} ({{ ansible_default_ipv4.address }})"
+
+    # --- DNSCrypt Proxy ---
+    - name: Deploy DNSCrypt Proxy
+      ansible.builtin.include_role:
+        name: infra.dns.dnscrypt_proxy
+
+    - name: Wait for DNSCrypt Proxy
+      ansible.builtin.wait_for:
+        port: 5353
+        host: 127.0.0.1
+        timeout: 30
+
+    # --- BIND9 ---
+    - name: Deploy BIND9
+      ansible.builtin.include_role:
+        name: infra.dns.bind9
+
+    - name: Wait for BIND9
+      ansible.builtin.wait_for:
+        port: 53
+        host: 127.0.0.1
+        timeout: 30
+
+- name: Validate DNS Stack
+  hosts: dns_servers
+  gather_facts: false
+  tasks:
+    # --- Service Status ---
+    - name: Check DNSCrypt Proxy service
+      ansible.builtin.systemd:
+        name: dnscrypt-proxy
+      register: dnscrypt_svc
+
+    - name: Check BIND9 service
+      ansible.builtin.systemd:
+        name: named
+      register: bind9_svc
+
+    # --- DNS Query Tests ---
+    - name: Test DNSCrypt Proxy directly (port 5353)
+      ansible.builtin.command: dig @127.0.0.1 -p 5353 +short +time=5 cloudflare.com A
+      register: dnscrypt_test
+      changed_when: false
+      failed_when: false
+
+    - name: Test BIND9 recursive query (port 53)
+      ansible.builtin.command: dig @127.0.0.1 +short +time=5 google.com A
+      register: bind9_test
+      changed_when: false
+      failed_when: false
+
+    - name: Test BIND9 from external IP
+      ansible.builtin.command: dig @{{ ansible_host }} +short +time=5 example.com A
+      register: external_test
+      changed_when: false
+      failed_when: false
+      delegate_to: localhost
+
+    # --- Results ---
+    - name: Display test results
+      ansible.builtin.debug:
+        msg: |
+          ══════════════════════════════════════════
+           DNS Stack Smoke Test Results
+          ══════════════════════════════════════════
+
+          Services:
+            DNSCrypt Proxy: {{ dnscrypt_svc.status.ActiveState | default('unknown') }}
+            BIND9:          {{ bind9_svc.status.ActiveState | default('unknown') }}
+
+          DNS Tests:
+            DNSCrypt (127.0.0.1:5353): {{ 'PASS' if dnscrypt_test.rc == 0 else 'FAIL' }}
+              → {{ dnscrypt_test.stdout_lines | default(['no response']) | join(', ') }}
+
+            BIND9 (127.0.0.1:53):      {{ 'PASS' if bind9_test.rc == 0 else 'FAIL' }}
+              → {{ bind9_test.stdout_lines | default(['no response']) | join(', ') }}
+
+            External ({{ ansible_host }}:53): {{ 'PASS' if external_test.rc == 0 else 'FAIL' }}
+              → {{ external_test.stdout_lines | default(['no response']) | join(', ') }}
+
+          Architecture:
+            Client → BIND9 (:53) → DNSCrypt (:5353) → Encrypted DNS
+
+          ══════════════════════════════════════════
+
+    - name: Fail if any test failed
+      ansible.builtin.fail:
+        msg: "DNS stack validation failed"
+      when: dnscrypt_test.rc != 0 or bind9_test.rc != 0

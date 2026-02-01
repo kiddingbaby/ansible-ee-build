@@ -1,0 +1,32 @@
+# Debian container with SSH for testing (simplified)
+FROM debian:bookworm-slim
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH and basic packages
+RUN apt-get update && apt-get install -y \
+    openssh-server \
+    sudo \
+    python3 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create ansible user with sudo privileges
+RUN useradd -m -s /bin/bash ansible && \
+    echo "ansible:ansible" | chpasswd && \
+    echo "ansible ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/ansible && \
+    chmod 0440 /etc/sudoers.d/ansible
+
+# Configure SSH
+RUN mkdir -p /run/sshd && \
+    sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:root" | chpasswd
+
+EXPOSE 22
+
+# Simple entrypoint
+RUN echo '#!/bin/bash\nmkdir -p /run/sshd\n/usr/sbin/sshd -D' > /docker-entrypoint.sh && \
+    chmod +x /docker-entrypoint.sh
+
+CMD ["/docker-entrypoint.sh"]
+
