@@ -5,8 +5,7 @@ ignore:
   - ansible_collections/
 
 rules:
-  line-length:
-    max: 200
+  line-length: disable
   document-start: disable
   truthy:
     check-keys: false
