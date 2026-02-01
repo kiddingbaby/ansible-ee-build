@@ -1,0 +1,24 @@
+name: Lint
+
+on:
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check VERSION files
+        run: |
+          for f in images/*/VERSION; do
+            [ -f "$f" ] || continue
+            ./scripts/check-version.sh "$f"
+          done
+
+      - name: YAML Lint
+        uses: ibiqlik/action-yamllint@v3
+        with:
+          file_or_dir: .
+          config_file: .yamllint.yml
