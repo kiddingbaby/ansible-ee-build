@@ -29,4 +29,3 @@ RUN echo '#!/bin/bash\nmkdir -p /run/sshd\n/usr/sbin/sshd -D' > /docker-entrypoi
     chmod +x /docker-entrypoint.sh
 
 CMD ["/docker-entrypoint.sh"]
-
