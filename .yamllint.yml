@@ -1,8 +1,15 @@
+---
 extends: default
+
+ignore:
+  - ansible_collections/
+
 rules:
   line-length:
-    max: 120
+    max: 200
+  document-start: disable
   truthy:
     check-keys: false
+    allowed-values: ['true', 'false', 'yes', 'no']
   comments:
     min-spaces-from-content: 1
