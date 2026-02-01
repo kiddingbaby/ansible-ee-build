@@ -1,0 +1,23 @@
+// BIND9 Options Configuration
+// For smoke test with DNSCrypt Proxy integration
+options {
+    directory "/var/cache/bind";
+
+    // DNSSEC validation
+    dnssec-validation auto;
+    auth-nxdomain no;
+
+    // Listen addresses
+    listen-on port 53 { localhost; 127.0.0.1; 192.168.0.101; };
+    listen-on-v6 { ::1; };
+
+    // Recursion settings - allow private networks
+    recursion yes;
+    allow-recursion { localhost; 10.0.0.0/8; 172.16.0.0/12; 192.168.0.0/16; fd00::/8; };
+    allow-query { localhost; 10.0.0.0/8; 172.16.0.0/12; 192.168.0.0/16; fd00::/8; };
+    allow-transfer { none; };
+
+    // Forward queries to DNSCrypt Proxy on port 5353
+    forward only;
+    forwarders { 127.0.0.1 port 5353; };
+};

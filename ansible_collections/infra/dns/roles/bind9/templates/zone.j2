@@ -1,0 +1,16 @@
+$TTL {{ zone.ttl | default(604800) }}
+{% if zone.origin is defined %}
+$ORIGIN {{ zone.origin }}
+{% endif %}
+@       IN      SOA     {{ zone.soa.primary }}. {{ zone.soa.admin }}. (
+                        {{ zone.soa.serial | default(ansible_date_time.epoch) }}  ; Serial
+                        {{ zone.soa.refresh | default(604800) }}      ; Refresh
+                        {{ zone.soa.retry | default(86400) }}       ; Retry
+                        {{ zone.soa.expire | default(2419200) }}     ; Expire
+                        {{ zone.soa.minimum | default(604800) }} )   ; Negative Cache TTL
+
+        IN      NS      {{ zone.soa.primary }}.
+
+{% for record in zone.records | default([]) %}
+{{ "%-15s" | format(record.name) }} IN {{ "%-6s" | format(record.type) }} {{ record.value }}
+{% endfor %}

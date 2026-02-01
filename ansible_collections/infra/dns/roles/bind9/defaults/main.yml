@@ -1,0 +1,65 @@
+---
+# BIND9 Role - Default Variables
+
+# Listening addresses
+bind9_listen_on:
+  - 127.0.0.1
+  - "{{ ansible_default_ipv4.address | default('0.0.0.0') }}"
+
+bind9_listen_on_v6:
+  - "::1"
+
+# Access control
+bind9_allow_recursion:
+  - localhost
+  - 10.0.0.0/8
+  - 172.16.0.0/12
+  - 192.168.0.0/16
+  - "fd00::/8"
+
+bind9_allow_query:
+  - localhost
+  - 10.0.0.0/8
+  - 172.16.0.0/12
+  - 192.168.0.0/16
+  - "fd00::/8"
+
+# Forwarding (to DNSCrypt Proxy)
+bind9_forward: only
+bind9_forwarders:
+  - address: 127.0.0.1
+    port: 5353
+
+# DNSSEC
+bind9_dnssec_validation: auto
+
+# Logging
+bind9_logging_enabled: false
+bind9_logging_file: /var/log/named/default.log
+bind9_logging_versions: 3
+bind9_logging_size: 5m
+bind9_logging_severity: info
+bind9_logging_categories:
+  - default
+  - queries
+  - security
+
+# RNDC (Remote Name Daemon Control)
+bind9_rndc_enabled: false
+bind9_rndc_key_name: rndc-key
+bind9_rndc_key_algorithm: hmac-sha256
+bind9_rndc_key_secret: ""  # 必须由用户提供
+bind9_rndc_address: 127.0.0.1
+bind9_rndc_port: 953
+
+# Zones
+bind9_zones: []
+# 示例:
+# bind9_zones:
+#   - name: example.internal
+#     type: master
+#     file: /etc/bind/db.example.internal
+#     records:
+#       - name: "@"
+#         type: A
+#         value: 192.168.0.100

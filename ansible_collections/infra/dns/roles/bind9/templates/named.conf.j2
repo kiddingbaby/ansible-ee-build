@@ -1,0 +1,34 @@
+// BIND9 Main Configuration
+// Managed by Ansible
+
+include "/etc/bind/named.conf.options";
+include "/etc/bind/named.conf.local";
+include "/etc/bind/named.conf.default-zones";
+
+{% if bind9_rndc_enabled and bind9_rndc_key_secret %}
+key "{{ bind9_rndc_key_name }}" {
+    algorithm {{ bind9_rndc_key_algorithm }};
+    secret "{{ bind9_rndc_key_secret }}";
+};
+
+controls {
+    inet {{ bind9_rndc_address }} port {{ bind9_rndc_port }}
+        allow { 127.0.0.1; } keys { "{{ bind9_rndc_key_name }}"; };
+};
+{% endif %}
+
+{% if bind9_logging_enabled %}
+logging {
+    channel default_log {
+        file "{{ bind9_logging_file }}" versions {{ bind9_logging_versions }} size {{ bind9_logging_size }};
+        severity {{ bind9_logging_severity }};
+        print-time yes;
+        print-severity yes;
+        print-category yes;
+    };
+
+{% for category in bind9_logging_categories %}
+    category {{ category }} { default_log; };
+{% endfor %}
+};
+{% endif %}

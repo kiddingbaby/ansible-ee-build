@@ -1,0 +1,37 @@
+# DNSCrypt Proxy Configuration
+# Managed by Ansible
+
+listen_addresses = {{ dnscrypt_proxy_listen_addresses | to_json }}
+
+server_names = {{ dnscrypt_proxy_server_names | to_json }}
+
+{% if dnscrypt_proxy_http_proxy %}
+http_proxy = '{{ dnscrypt_proxy_http_proxy }}'
+{% endif %}
+
+cache = {{ dnscrypt_proxy_cache | lower }}
+cache_size = {{ dnscrypt_proxy_cache_size }}
+cache_min_ttl = {{ dnscrypt_proxy_cache_min_ttl }}
+cache_max_ttl = {{ dnscrypt_proxy_cache_max_ttl }}
+
+require_dnssec = {{ dnscrypt_proxy_require_dnssec | lower }}
+
+max_clients = {{ dnscrypt_proxy_max_clients }}
+
+{% if dnscrypt_proxy_query_log %}
+[query_log]
+  file = '{{ dnscrypt_proxy_query_log }}'
+{% endif %}
+
+{% if dnscrypt_proxy_nx_log %}
+[nx_log]
+  file = '{{ dnscrypt_proxy_nx_log }}'
+{% endif %}
+
+[sources]
+  [sources.'public-resolvers']
+  url = '{{ dnscrypt_proxy_sources_url }}'
+  cache_file = '{{ dnscrypt_proxy_sources_cache }}'
+  minisign_key = '{{ dnscrypt_proxy_sources_key }}'
+  refresh_delay = {{ dnscrypt_proxy_sources_refresh_delay }}
+  prefix = ''

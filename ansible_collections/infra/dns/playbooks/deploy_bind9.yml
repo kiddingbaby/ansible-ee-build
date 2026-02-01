@@ -1,0 +1,6 @@
+---
+- name: Deploy BIND9 DNS server
+  hosts: dns_servers
+  become: true
+  roles:
+    - role: infra.dns.bind9

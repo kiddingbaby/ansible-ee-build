@@ -1,0 +1,8 @@
+// BIND9 Local Zones Configuration
+// Add your authoritative zones here
+
+// Example local zone:
+// zone "example.local" {
+//     type master;
+//     file "/etc/bind/zones/db.example.local";
+// };

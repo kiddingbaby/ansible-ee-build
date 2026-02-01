@@ -1,0 +1,64 @@
+---
+# BIND9 Only Deployment (without DNSCrypt)
+# Quick deployment for basic DNS service
+
+- name: Preflight checks
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: Verify dns_servers group exists
+      ansible.builtin.assert:
+        that:
+          - "groups['dns_servers'] is defined"
+          - "groups['dns_servers'] | length > 0"
+        fail_msg: "No hosts in dns_servers group."
+
+- name: Deploy BIND9
+  hosts: dns_servers
+  become: yes
+  gather_facts: yes
+  tasks:
+    - name: Display deployment info
+      ansible.builtin.debug:
+        msg: |
+          Deploying BIND9 on: {{ ansible_hostname }}
+          IP: {{ ansible_default_ipv4.address }}
+          OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
+
+    - name: Deploy BIND9 role
+      ansible.builtin.include_role:
+        name: infra.dns.bind9
+      vars:
+        # Disable forwarders for now (use public DNS directly)
+        bind9_forwarders_enabled: false
+
+    - name: Deployment complete
+      ansible.builtin.debug:
+        msg: "BIND9 deployed successfully!"
+
+- name: Validation
+  hosts: dns_servers
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: Wait for BIND9
+      ansible.builtin.wait_for:
+        port: 53
+        host: 127.0.0.1
+        timeout: 30
+
+    - name: Test DNS
+      ansible.builtin.command: dig @127.0.0.1 +short google.com
+      register: dns_test
+      changed_when: false
+      failed_when: false
+
+    - name: Show result
+      ansible.builtin.debug:
+        msg: |
+          BIND9 Status: {{ 'WORKING ✓' if dns_test.rc == 0 else 'FAILED ✗' }}
+          Test query: {{ dns_test.stdout_lines | default(['No response']) | join(', ') }}
+
+          Configure clients to use: {{ ansible_default_ipv4.address }}
+          Test: dig @{{ ansible_default_ipv4.address }} google.com

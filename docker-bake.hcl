@@ -1,6 +1,8 @@
 variable "GITHUB_SHA" { default = "unknown" }
 variable "IMAGE_BASE_TAG" { default = "dev" }
 variable "IMAGE_K3S_TAG" { default = "dev" }
+variable "IMAGE_DNS_TAG" { default = "dev" }
+variable "IMAGE_CI_TAG" { default = "dev" }
 variable "REGISTRY" { default = "ghcr.io/kiddingbaby" }
 variable "DEBIAN_MIRROR" { default = "mirrors.tuna.tsinghua.edu.cn" }
 variable "PIP_MIRROR" { default = "https://pypi.tuna.tsinghua.edu.cn/simple/" }
@@ -60,6 +62,53 @@ target "k3s" {
   tags = ["${REGISTRY}/ansible-k3s:${IMAGE_K3S_TAG}"]
 }
 
+target "dns" {
+  inherits   = ["_common"]
+  context    = "images/dns"
+  dockerfile = "Dockerfile"
+  cache_from = ["type=gha"]
+
+  contexts = {
+    base_image    = "target:base"
+    ansible-bind9 = "./ansible_collections/infra/dns"
+  }
+
+  args = {
+    PIP_MIRROR = "${PIP_MIRROR}"
+  }
+
+  labels = {
+    "org.opencontainers.image.title"       = "Ansible EE for DNS/BIND9"
+    "org.opencontainers.image.description" = "Ansible Execution Environment for BIND9 DNS server management"
+    "org.opencontainers.image.version"     = "${IMAGE_DNS_TAG}"
+  }
+
+  tags = ["${REGISTRY}/ansible-dns:${IMAGE_DNS_TAG}"]
+}
+
+target "ci" {
+  inherits   = ["_common"]
+  context    = "images/ci"
+  dockerfile = "Dockerfile"
+  cache_from = ["type=gha"]
+
+  contexts = {
+    base_image = "target:base"
+  }
+
+  args = {
+    PIP_MIRROR = "${PIP_MIRROR}"
+  }
+
+  labels = {
+    "org.opencontainers.image.title"       = "Ansible EE CI"
+    "org.opencontainers.image.description" = "Ansible Execution Environment for CI/CD with linting tools"
+    "org.opencontainers.image.version"     = "${IMAGE_CI_TAG}"
+  }
+
+  tags = ["${REGISTRY}/ansible-ci:${IMAGE_CI_TAG}"]
+}
+
 group "all" {
-  targets = ["base", "k3s"]
+  targets = ["base", "k3s", "dns", "ci"]
 }
