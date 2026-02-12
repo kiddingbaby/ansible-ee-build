@@ -3,6 +3,7 @@ variable "IMAGE_BASE_TAG" { default = "dev" }
 variable "IMAGE_K3S_TAG" { default = "dev" }
 variable "IMAGE_DNS_TAG" { default = "dev" }
 variable "IMAGE_CI_TAG" { default = "dev" }
+variable "IMAGE_SEC_SCAN_TAG" { default = "dev" }
 variable "REGISTRY" { default = "ghcr.io/kiddingbaby" }
 variable "DEBIAN_MIRROR" { default = "mirrors.tuna.tsinghua.edu.cn" }
 variable "PIP_MIRROR" { default = "https://pypi.tuna.tsinghua.edu.cn/simple/" }
@@ -108,6 +109,30 @@ target "ci" {
   tags = ["${REGISTRY}/ansible-ci:${IMAGE_CI_TAG}"]
 }
 
+target "sec-scan" {
+  inherits   = ["_common"]
+  context    = "images/sec-scan"
+  dockerfile = "Dockerfile"
+  cache_from = ["type=gha"]
+
+  contexts = {
+    base_image = "target:base"
+  }
+
+  args = {
+    PIP_MIRROR    = "${PIP_MIRROR}"
+    DEBIAN_MIRROR = "${DEBIAN_MIRROR}"
+  }
+
+  labels = {
+    "org.opencontainers.image.title"       = "Ansible EE Security Scanner"
+    "org.opencontainers.image.description" = "Ansible Execution Environment for security scanning with Semgrep, Gitleaks, Trivy, Syft, Cosign"
+    "org.opencontainers.image.version"     = "${IMAGE_SEC_SCAN_TAG}"
+  }
+
+  tags = ["${REGISTRY}/ansible-sec-scan:${IMAGE_SEC_SCAN_TAG}"]
+}
+
 group "all" {
-  targets = ["base", "k3s", "dns", "ci"]
+  targets = ["base", "k3s", "dns", "ci", "sec-scan"]
 }
