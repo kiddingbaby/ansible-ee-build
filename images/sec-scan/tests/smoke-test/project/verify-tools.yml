@@ -1,0 +1,58 @@
+- hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Verify gitleaks
+      ansible.builtin.command: gitleaks version
+      changed_when: false
+      register: gitleaks_result
+
+    - name: Show gitleaks version
+      ansible.builtin.debug:
+        var: gitleaks_result.stdout
+
+    - name: Verify trivy
+      ansible.builtin.command: trivy --version
+      changed_when: false
+      register: trivy_result
+
+    - name: Show trivy version
+      ansible.builtin.debug:
+        var: trivy_result.stdout
+
+    - name: Verify syft
+      ansible.builtin.command: syft version
+      changed_when: false
+      register: syft_result
+
+    - name: Show syft version
+      ansible.builtin.debug:
+        var: syft_result.stdout
+
+    - name: Verify cosign
+      ansible.builtin.command: cosign version
+      changed_when: false
+      register: cosign_result
+
+    - name: Show cosign version
+      ansible.builtin.debug:
+        var: cosign_result.stdout
+
+    - name: Verify semgrep (amd64 only)
+      ansible.builtin.command: semgrep --version
+      changed_when: false
+      ignore_errors: true
+      register: semgrep_result
+
+    - name: Show semgrep version
+      ansible.builtin.debug:
+        var: semgrep_result.stdout
+      when: semgrep_result is succeeded
+
+    - name: Verify ansible-runner
+      ansible.builtin.command: ansible-runner --version
+      changed_when: false
+      register: runner_result
+
+    - name: Show ansible-runner version
+      ansible.builtin.debug:
+        var: runner_result.stdout
