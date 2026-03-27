@@ -18,7 +18,7 @@
 | 基础 | base 镜像全部组件 | — | Ansible 运行时 |
 | Semgrep | 1.67.0 | Python pip | SAST 静态代码分析 (amd64 only) |
 | Gitleaks | 8.21.2 | Go binary | Git 密钥泄露检测 |
-| Trivy | 0.58.2 | Go binary | 容器/依赖漏洞扫描 |
+| Trivy | 0.69.3 | Go binary | 容器/依赖漏洞扫描 |
 | Syft | 1.18.1 | Go binary | SBOM 生成 (SPDX/CycloneDX) |
 | Cosign | 2.4.1 | Go binary | 容器镜像签名 + 验证 |
 
