@@ -18,6 +18,7 @@ for dir in images/*; do
     echo "Target: $target | Mode: $mode | Tag: $tag" >&2
 
     # Format: IMAGE_TARGET_TAG=value
-    var_name="IMAGE_$(echo "$target" | tr '[:lower:]' '[:upper:]')_TAG"
+    normalized_target=$(echo "$target" | tr '[:lower:]-' '[:upper:]_')
+    var_name="IMAGE_${normalized_target}_TAG"
     echo "$var_name=$tag"
 done
