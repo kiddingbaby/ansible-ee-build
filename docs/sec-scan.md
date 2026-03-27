@@ -49,6 +49,10 @@ docker run --rm \
   ansible-runner run /runner -p verify-tools.yml
 ```
 
+```bash
+just smoke-sec-scan
+```
+
 ## 使用
 
 ### Semgrep SAST 扫描
@@ -105,4 +109,4 @@ docker run --rm \
 | ---- | ---- |
 | Semgrep arm64 | 无官方 wheel，Dockerfile 通过 `TARGETARCH` 条件跳过 |
 | Release URL 命名 | Gitleaks 用 `x64`/`arm64`，Trivy 用 `64bit`/`ARM64`，Syft/Cosign 用 `amd64`/`arm64` |
-| 版本升级 | 修改 Dockerfile `ARG` 和 `requirements.txt` |
+| 版本升级 | 同步更新 Dockerfile `ARG`、`VERSION` 和 smoke test 里的目标版本断言 |

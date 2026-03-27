@@ -18,6 +18,7 @@ help:
     @echo "Usage:"
     @echo "  just build [TARGET] [PLATFORM]  Build images (defaults: all, linux/amd64)"
     @echo "  just print [TARGET] [PLATFORM]  Print bake config"
+    @echo "  just smoke-sec-scan [IMAGE]     Run sec-scan smoke test"
     @echo "  just smoke-services [IMAGE]     Run ansible-services smoke test"
     @echo ""
     @echo "Examples:"
@@ -41,3 +42,10 @@ smoke-services IMAGE="ghcr.io/kiddingbaby/ansible-services:dev":
       -v "$PWD/images/services/tests/smoke-test:/runner:Z" \
       {{IMAGE}} \
       ansible-runner run /runner -p verify-services.yml
+
+# Run sec-scan smoke test
+smoke-sec-scan IMAGE="ghcr.io/kiddingbaby/ansible-sec-scan:dev":
+    docker run --rm -t \
+      -v "$PWD/images/sec-scan/tests/smoke-test:/runner:Z" \
+      {{IMAGE}} \
+      ansible-runner run /runner -p verify-tools.yml
