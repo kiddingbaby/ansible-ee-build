@@ -1,5 +1,7 @@
 - hosts: localhost
   gather_facts: false
+  vars:
+    expected_trivy_version: "0.69.3"
   tasks:
     - name: Verify gitleaks
       ansible.builtin.command: gitleaks version
@@ -18,6 +20,12 @@
     - name: Show trivy version
       ansible.builtin.debug:
         var: trivy_result.stdout
+
+    - name: Assert trivy version
+      ansible.builtin.assert:
+        that:
+          - "trivy_result.stdout == ('Version: ' ~ expected_trivy_version)"
+        fail_msg: "Unexpected trivy version: {{ trivy_result.stdout }}"
 
     - name: Verify syft
       ansible.builtin.command: syft version

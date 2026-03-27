@@ -18,7 +18,7 @@
 | 基础 | base 镜像全部组件 | — | Ansible 运行时 |
 | Semgrep | 1.67.0 | Python pip | SAST 静态代码分析 (amd64 only) |
 | Gitleaks | 8.21.2 | Go binary | Git 密钥泄露检测 |
-| Trivy | 0.58.2 | Go binary | 容器/依赖漏洞扫描 |
+| Trivy | 0.69.3 | Go binary | 容器/依赖漏洞扫描 |
 | Syft | 1.18.1 | Go binary | SBOM 生成 (SPDX/CycloneDX) |
 | Cosign | 2.4.1 | Go binary | 容器镜像签名 + 验证 |
 
@@ -47,6 +47,10 @@ docker run --rm \
   -v $(pwd)/images/sec-scan/tests/smoke-test:/runner:Z \
   ghcr.io/kiddingbaby/ansible-sec-scan:dev \
   ansible-runner run /runner -p verify-tools.yml
+```
+
+```bash
+just smoke-sec-scan
 ```
 
 ## 使用
@@ -105,4 +109,4 @@ docker run --rm \
 | ---- | ---- |
 | Semgrep arm64 | 无官方 wheel，Dockerfile 通过 `TARGETARCH` 条件跳过 |
 | Release URL 命名 | Gitleaks 用 `x64`/`arm64`，Trivy 用 `64bit`/`ARM64`，Syft/Cosign 用 `amd64`/`arm64` |
-| 版本升级 | 修改 Dockerfile `ARG` 和 `requirements.txt` |
+| 版本升级 | 同步更新 Dockerfile `ARG`、`VERSION` 和 smoke test 里的目标版本断言 |

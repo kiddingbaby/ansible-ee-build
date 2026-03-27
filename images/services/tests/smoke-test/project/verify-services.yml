@@ -1,0 +1,53 @@
+- hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Verify ansible-runner is installed
+      ansible.builtin.command: ansible-runner --version
+      register: runner_version
+      changed_when: false
+
+    - name: Verify required collections are installed
+      ansible.builtin.command: ansible-galaxy collection list
+      register: collection_list
+      changed_when: false
+
+    - name: Check community.docker availability
+      ansible.builtin.assert:
+        that:
+          - "'community.docker' in collection_list.stdout"
+          - "'community.general' in collection_list.stdout"
+          - "'ansible.posix' in collection_list.stdout"
+          - "'infra.dns' in collection_list.stdout"
+
+    - name: Verify community.docker module docs load
+      ansible.builtin.command: ansible-doc -t module community.docker.docker_compose_v2
+      register: docker_module_doc
+      changed_when: false
+
+    - name: Verify ansible.posix module docs load
+      ansible.builtin.command: ansible-doc -t module ansible.posix.mount
+      register: posix_module_doc
+      changed_when: false
+
+    - name: Render sample compose configuration
+      ansible.builtin.copy:
+        dest: /tmp/services-smoke-compose.yml
+        content: |
+          services:
+            hello:
+              image: alpine:3.22
+              command: ["/bin/sh", "-c", "echo smoke"]
+
+    - name: Verify Python runtime imports
+      ansible.builtin.command: python -c "import ansible_runner, docker; print('imports-ok')"
+      register: python_import
+      changed_when: false
+
+    - name: Show smoke result
+      ansible.builtin.debug:
+        msg:
+          - "ansible-runner={{ runner_version.stdout }}"
+          - "community.docker={{ docker_module_doc.rc }}"
+          - "ansible.posix={{ posix_module_doc.rc }}"
+          - "python={{ python_import.stdout }}"

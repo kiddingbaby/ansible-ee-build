@@ -24,6 +24,7 @@ artifacts/
 runner/artifacts/
 runner/inventory/
 runner/project/
+**/tests/smoke-test/artifacts/
 !runner/project/site.yml
 !runner/project/README.md
 

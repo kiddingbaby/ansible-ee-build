@@ -22,6 +22,7 @@
 | `_common` | 公共配置（平台、缓存、标签） |
 | `base` | 基础镜像 |
 | `dns` | DNS 镜像 |
+| `services` | Host services 镜像 |
 | `k3s` | K3s 镜像 |
 | `all` | 构建所有镜像 |
 
@@ -30,11 +31,10 @@
 镜像使用 Docker Bake 的 `contexts` 特性处理依赖：
 
 ```hcl
-# dns/k3s 依赖 base 镜像
+# dns/services/k3s 依赖 base 镜像
 base_image = "target:base"
 
-# dns 引用本地 collection
-ansible-bind9 = "./ansible_collections/infra/dns"
+# services/dns 可引用本地 collection
 ```
 
 **影响**：
@@ -77,7 +77,7 @@ scripts/
 - CI 文件变更或 `force_build_all` 时构建全部
 - 变更检测路径：
   - `images/{name}/**` → 构建对应镜像
-  - `ansible_collections/**` → 构建 dns 镜像
+  - `ansible_collections/**` → 构建全部（本地 collection 可能影响 `dns` 与 `services`）
   - `docker-bake.hcl` → 构建全部
 
 ### 镜像推送
@@ -85,14 +85,15 @@ scripts/
 ```text
 ghcr.io/kiddingbaby/ansible-base:{tag}
 ghcr.io/kiddingbaby/ansible-dns:{tag}
+ghcr.io/kiddingbaby/ansible-services:{tag}
 ghcr.io/kiddingbaby/ansible-k3s:{tag}
 ```
 
 ## 本地开发工作流
 
-1. **修改**镜像目录（如 `images/k3s/`）
-2. **本地构建**：`just build k3s`
-3. **测试**：运行冒烟测试
+1. **修改**镜像目录（如 `images/services/`）
+2. **本地构建**：`just build services`
+3. **本地 smoke**：`just smoke-services`
 4. **提交推送**：CI 自动检测变更并构建
 
 ## 重要说明
