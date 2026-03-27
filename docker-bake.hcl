@@ -4,6 +4,7 @@ variable "IMAGE_K3S_TAG" { default = "dev" }
 variable "IMAGE_DNS_TAG" { default = "dev" }
 variable "IMAGE_CI_TAG" { default = "dev" }
 variable "IMAGE_SEC_SCAN_TAG" { default = "dev" }
+variable "IMAGE_SERVICES_TAG" { default = "dev" }
 variable "REGISTRY" { default = "ghcr.io/kiddingbaby" }
 variable "DEBIAN_MIRROR" { default = "mirrors.tuna.tsinghua.edu.cn" }
 variable "PIP_MIRROR" { default = "https://pypi.tuna.tsinghua.edu.cn/simple/" }
@@ -86,6 +87,29 @@ target "dns" {
   tags = ["${REGISTRY}/ansible-dns:${IMAGE_DNS_TAG}"]
 }
 
+target "services" {
+  inherits   = ["_common"]
+  context    = "."
+  dockerfile = "images/services/Dockerfile"
+  cache_from = ["type=gha"]
+
+  contexts = {
+    base_image = "target:base"
+  }
+
+  args = {
+    PIP_MIRROR = "${PIP_MIRROR}"
+  }
+
+  labels = {
+    "org.opencontainers.image.title"       = "Ansible EE for Host Services"
+    "org.opencontainers.image.description" = "Ansible Execution Environment for host-level service management"
+    "org.opencontainers.image.version"     = "${IMAGE_SERVICES_TAG}"
+  }
+
+  tags = ["${REGISTRY}/ansible-services:${IMAGE_SERVICES_TAG}"]
+}
+
 target "ci" {
   inherits   = ["_common"]
   context    = "images/ci"
@@ -134,5 +158,5 @@ target "sec-scan" {
 }
 
 group "all" {
-  targets = ["base", "k3s", "dns", "ci", "sec-scan"]
+  targets = ["base", "k3s", "dns", "services", "ci", "sec-scan"]
 }

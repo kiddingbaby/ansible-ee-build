@@ -6,8 +6,9 @@
 
 ```bash
 # justfile（本地开发）
-just build [target] [platform]    # target: base, dns, k3s, sec-scan; platform: linux/amd64, linux/arm64
+just build [target] [platform]    # target: base, dns, services, k3s, ci, sec-scan; platform: linux/amd64, linux/arm64
 just print [target]               # 打印 bake 配置
+just smoke-services [image]       # 运行 ansible-services 冒烟测试
 
 # docker buildx bake（CI/CD）
 docker buildx bake -f docker-bake.hcl [target] --load
@@ -18,6 +19,7 @@ docker buildx bake -f docker-bake.hcl [target] --load
 ```text
 base (Python 3.11 + ansible-core 2.17.14 + ansible-runner 2.4.2)
 ├── dns      (base + infra.dns collection)
+├── services (base + host-services collections)
 ├── k3s      (base + k3s-ansible collection)
 ├── ci       (base + ansible-lint + yamllint)
 └── sec-scan (base + Semgrep + Gitleaks + Trivy + Syft + Cosign)
@@ -43,12 +45,18 @@ images/{image}/tests/smoke-test/
 └── project/*.yml
 ```
 
+`services` 镜像当前使用最小本地 smoke：
+
+- `images/services/tests/smoke-test/inventory/hosts.yml`
+- `images/services/tests/smoke-test/project/verify-services.yml`
+
 ## 文档索引
 
 | 文档 | 内容 |
 | ---- | ---- |
 | [docs/base.md](docs/base.md) | Base 镜像 spec |
 | [docs/dns.md](docs/dns.md) | DNS 镜像 spec |
+| [docs/services.md](docs/services.md) | Host services 镜像 spec |
 | [docs/k3s.md](docs/k3s.md) | K3s 镜像 spec |
 | [docs/ci.md](docs/ci.md) | CI 镜像 spec |
 | [docs/sec-scan.md](docs/sec-scan.md) | Sec-Scan 镜像 spec |

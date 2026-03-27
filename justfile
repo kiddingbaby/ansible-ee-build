@@ -18,6 +18,7 @@ help:
     @echo "Usage:"
     @echo "  just build [TARGET] [PLATFORM]  Build images (defaults: all, linux/amd64)"
     @echo "  just print [TARGET] [PLATFORM]  Print bake config"
+    @echo "  just smoke-services [IMAGE]     Run ansible-services smoke test"
     @echo ""
     @echo "Examples:"
     @echo "  just build                    # build all with linux/amd64"
@@ -33,3 +34,10 @@ print TARGET="all" PLATFORM="linux/amd64":
 # Build images
 build TARGET="all" PLATFORM="linux/amd64":
     docker buildx bake -f docker-bake.hcl {{TARGET}} --load --set _common.platform={{PLATFORM}}
+
+# Run ansible-services smoke test
+smoke-services IMAGE="ghcr.io/kiddingbaby/ansible-services:dev":
+    docker run --rm -t \
+      -v "$PWD/images/services/tests/smoke-test:/runner:Z" \
+      {{IMAGE}} \
+      ansible-runner run /runner -p verify-services.yml
