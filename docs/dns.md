@@ -52,7 +52,19 @@ docker run --rm ghcr.io/kiddingbaby/ansible-dns:dev \
   ansible-galaxy collection list | grep infra.dns
 ```
 
-### 运行冒烟测试
+### 运行集成冒烟测试
+
+优先使用无需 systemd 的集成 smoke：
+
+```bash
+docker run --rm -it \
+  -v $(pwd)/images/dns/tests/smoke-test:/runner:Z \
+  -v ~/.ssh:/home/ansible/.ssh:ro,Z \
+  ghcr.io/kiddingbaby/ansible-dns:dev \
+  ansible-runner run /runner -p test-without-systemd.yml
+```
+
+如果测试目标明确支持完整 systemd，再运行完整部署 smoke：
 
 ```bash
 docker run --rm -it \

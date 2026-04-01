@@ -51,8 +51,10 @@ jobs:
           list-files: json
           filters: |
             ci:
+              - '.github/actions/**'
               - '.github/workflows/**'
               - 'docker-bake.hcl'
+              - 'ansible_collections/**'
             images:
               - 'images/**'
 

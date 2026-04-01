@@ -30,7 +30,7 @@
       register: posix_module_doc
       changed_when: false
 
-    - name: Render sample compose configuration
+    - name: Write sample compose configuration
       ansible.builtin.copy:
         dest: /tmp/services-smoke-compose.yml
         content: |

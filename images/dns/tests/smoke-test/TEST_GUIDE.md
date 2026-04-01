@@ -2,7 +2,7 @@
 
 ## 概述
 
-这个测试环境用于验证 `ansible-bind9` 集合在 `ansible-dns` 容器中的集成。
+这个测试环境用于验证 `infra.dns` collection 在 `ansible-dns` 容器中的集成。
 
 ## 测试环境组成
 
@@ -12,7 +12,7 @@
    - 网络地址：172.20.0.10
    - 端口映射：2222 → 22
 
-2. **ansible-dns 容器**: 包含 ansible-bind9 集合的执行环境
+2. **ansible-dns 容器**: 包含 `infra.dns` collection 的执行环境
 
 ## 快速开始
 
@@ -49,18 +49,23 @@ docker run --rm \
 ## 可用的测试 Playbook
 
 ### test-without-systemd.yml
-验证 ansible-bind9 集合的完整集成：
+
+验证 `infra.dns` collection 的完整集成：
+
 - ✓ 检查集合角色文件存在性
 - ✓ 测试 SSH 远程连接
 - ✓ 验证 BIND9 软件包可用性
 - ✓ 确认远程主机兼容性
 
 ### test-localhost.yml
+
 快速验证集合本地安装：
+
 - ✓ 列出已安装的集合
 - ✓ 检查角色任务文件完整性
 
 ### run-dns-deploy.yml
+
 完整的 BIND9 部署测试（需要 systemd 支持）
 
 ## 环境清理
@@ -72,11 +77,13 @@ docker compose down
 ## 故障排除
 
 ### 容器无法启动
+
 ```bash
 docker compose logs dns-test-vm
 ```
 
 ### SSH 连接失败
+
 ```bash
 # 检查容器状态
 docker exec dns-test-vm systemctl status ssh
@@ -85,6 +92,7 @@ ssh -p 2222 ansible@localhost  # 密码：ansible
 ```
 
 ### 网络问题
+
 ```bash
 # 检查网络
 docker network inspect smoke-test_test-network
@@ -95,13 +103,12 @@ docker exec dns-test-vm ping -c 3 172.20.0.1
 ## 测试结果验证
 
 成功的测试运行会显示：
+
 ```
 ✓ Role task file 'main.yml' verified
-✓ Role task file 'install.yml' verified
-✓ Role task file 'configure.yml' verified
-✓ Role task file 'deploy_custom_configs.yml' verified
+✓ DNSCrypt role task file 'main.yml' verified
 ✓ BIND9 packages are available for installation
-✓✓✓ ansible-bind9 collection is properly integrated and ready for deployment ✓✓✓
+✓✓✓ infra.dns collection is properly integrated and ready for deployment ✓✓✓
 ```
 
 ## 注意事项
