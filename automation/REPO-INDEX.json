@@ -1,0 +1,63 @@
+{
+  "schema_version": "repo-automation-index/v1",
+  "repository": {
+    "name": "ansible-ee-build",
+    "role": "execution environment build and smoke repository"
+  },
+  "policy": {
+    "machine_facing_root": "automation",
+    "human_facing_root": "docs",
+    "adapter_files": [
+      "AGENTS.md",
+      "CLAUDE.md",
+      ".github/copilot-instructions.md"
+    ]
+  },
+  "human_docs": [
+    {
+      "path": "README.md",
+      "role": "repo-overview"
+    },
+    {
+      "path": "docs/build.md",
+      "role": "build-guide"
+    },
+    {
+      "path": "docs/services.md",
+      "role": "services-image-guide"
+    },
+    {
+      "path": "docs/dns.md",
+      "role": "dns-image-guide"
+    }
+  ],
+  "stable_entrypoints": [
+    {
+      "id": "build",
+      "command": "just build [target] [platform]",
+      "kind": "operator_command"
+    },
+    {
+      "id": "print",
+      "command": "just print [target] [platform]",
+      "kind": "operator_command"
+    },
+    {
+      "id": "smoke-services",
+      "command": "just smoke-services [image]",
+      "kind": "operator_command"
+    },
+    {
+      "id": "smoke-sec-scan",
+      "command": "just smoke-sec-scan [image]",
+      "kind": "operator_command"
+    }
+  ],
+  "validation": {
+    "command": "python3 automation/tools/validate_repo_automation.py",
+    "workflows": [
+      ".github/workflows/build.yml",
+      ".github/workflows/lint.yml"
+    ]
+  }
+}
