@@ -1,12 +1,12 @@
 ---
 # Local test to verify collection is working
-- name: Verify kiddingbaby.bind9 collection
+- name: Verify infra.dns collection
   hosts: localhost
   connection: local
   gather_facts: yes
   tasks:
     - name: Check if collection is installed
-      ansible.builtin.command: ansible-galaxy collection list kiddingbaby.bind9
+      ansible.builtin.command: ansible-galaxy collection list infra.dns
       register: collection_check
       changed_when: false
 
@@ -16,12 +16,12 @@
 
     - name: Verify role files exist
       ansible.builtin.stat:
-        path: "/usr/share/ansible/collections/ansible_collections/kiddingbaby/bind9/roles/bind9/tasks/{{ item }}"
+        path: "/usr/share/ansible/collections/ansible_collections/infra/dns/{{ item }}"
       loop:
-        - main.yml
-        - install.yml
-        - configure.yml
-        - deploy_custom_configs.yml
+        - roles/bind9/tasks/main.yml
+        - roles/dnscrypt_proxy/tasks/main.yml
+        - playbooks/deploy_bind9.yml
+        - playbooks/deploy_dnscrypt_proxy.yml
       register: role_files
 
     - name: Check all role files exist
@@ -33,4 +33,4 @@
 
     - name: Success message
       ansible.builtin.debug:
-        msg: "✓ ansible-bind9 collection is properly installed and accessible"
+        msg: "✓ infra.dns collection is properly installed and accessible"

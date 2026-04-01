@@ -63,7 +63,7 @@ docker run --rm -t \
 - 必需 collection 已安装
 - `community.docker` / `ansible.posix` 模块文档可加载
 - Python 可以导入 `ansible_runner` 与 `docker`
-- 可以完成一个最小 compose 样例渲染
+- 可以写出一个最小 compose 样例文件，验证容器内文件写入与基础依赖可用
 
 ## 运行约束
 

@@ -6,23 +6,23 @@
 
 ```yaml
 # 监听地址
-dnscrypt_listen_addresses:
+dnscrypt_proxy_listen_addresses:
   - '127.0.0.1:5353'
 
 # DNS 提供商
-dnscrypt_server_names:
+dnscrypt_proxy_server_names:
   - cloudflare
   - quad9-dnscrypt-ip4-filter-pri
 
 # HTTP 代理（用于受限网络）
-dnscrypt_http_proxy: ""
+dnscrypt_proxy_http_proxy: ""
 
 # 缓存设置
-dnscrypt_cache: true
-dnscrypt_cache_size: 512
+dnscrypt_proxy_cache: true
+dnscrypt_proxy_cache_size: 512
 
 # 安全
-dnscrypt_require_dnssec: true
+dnscrypt_proxy_require_dnssec: true
 ```
 
 所有变量见 `defaults/main.yml`。

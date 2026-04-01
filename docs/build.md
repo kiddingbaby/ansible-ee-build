@@ -24,6 +24,8 @@
 | `dns` | DNS 镜像 |
 | `services` | Host services 镜像 |
 | `k3s` | K3s 镜像 |
+| `ci` | CI / lint 镜像 |
+| `sec-scan` | 安全扫描镜像 |
 | `all` | 构建所有镜像 |
 
 ## 构建上下文依赖
@@ -66,7 +68,7 @@ scripts/
 
 ### 构建流程
 
-1. **检测变更**：分析 `.github/workflows/**`、`docker-bake.hcl`、`images/**`、`ansible_collections/**`
+1. **检测变更**：分析 `.github/actions/**`、`.github/workflows/**`、`docker-bake.hcl`、`images/**`、`ansible_collections/**`
 2. **计算标签**：根据事件类型生成镜像标签（见 `.github/actions/compute-tags`）
 3. **确定目标**：智能选择需要构建的镜像（见 `.github/actions/determine-targets`）
 4. **构建推送**：使用 `docker/bake-action` 和 GitHub Actions 缓存
@@ -76,6 +78,7 @@ scripts/
 - 仅构建变更的镜像
 - CI 文件变更或 `force_build_all` 时构建全部
 - 变更检测路径：
+  - `.github/actions/**` 或 `.github/workflows/**` → 构建全部
   - `images/{name}/**` → 构建对应镜像
   - `ansible_collections/**` → 构建全部（本地 collection 可能影响 `dns` 与 `services`）
   - `docker-bake.hcl` → 构建全部
@@ -87,6 +90,8 @@ ghcr.io/kiddingbaby/ansible-base:{tag}
 ghcr.io/kiddingbaby/ansible-dns:{tag}
 ghcr.io/kiddingbaby/ansible-services:{tag}
 ghcr.io/kiddingbaby/ansible-k3s:{tag}
+ghcr.io/kiddingbaby/ansible-ci:{tag}
+ghcr.io/kiddingbaby/ansible-sec-scan:{tag}
 ```
 
 ## 本地开发工作流
@@ -100,5 +105,5 @@ ghcr.io/kiddingbaby/ansible-k3s:{tag}
 
 - **镜像源**：默认使用清华镜像源，加速国内构建
 - **构建缓存**：CI 使用 GHA 缓存；本地使用 Docker BuildKit 缓存
-- **多平台**：CI 构建 `linux/amd64,linux/arm64`；本地默认当前平台
+- **多平台**：CI 构建 `linux/amd64,linux/arm64`；本地 `just` 默认 `linux/amd64`，需要其它平台时显式传第二个参数
 - **非 root**：所有镜像以 `ansible` 用户运行

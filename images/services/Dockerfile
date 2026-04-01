@@ -5,7 +5,7 @@ ARG PIP_MIRROR
 
 USER root
 
-COPY ansible_collections/infra/dns /tmp/ansible-bind9
+COPY ansible_collections/infra/dns /tmp/infra-dns
 COPY images/services/requirements.txt /tmp/requirements.txt
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install \
@@ -18,6 +18,6 @@ COPY images/services/requirements.yml /tmp/requirements.yml
 RUN ansible-galaxy collection install \
       -r /tmp/requirements.yml \
  && rm -f /tmp/requirements.yml \
- && rm -rf /tmp/ansible-bind9
+ && rm -rf /tmp/infra-dns
 
 USER ansible

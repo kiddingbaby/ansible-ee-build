@@ -1,5 +1,5 @@
 ---
-# Simplified test to verify BIND9 collection integration
+# Simplified test to verify infra.dns collection integration
 - name: Preflight checks for BIND9 deployment
   hosts: localhost
   connection: local
@@ -14,20 +14,20 @@
 
     - name: Verify role structure in collection (local)
       ansible.builtin.stat:
-        path: "/usr/share/ansible/collections/ansible_collections/kiddingbaby/bind9/roles/bind9/tasks/{{ item }}"
+        path: "/usr/share/ansible/collections/ansible_collections/infra/dns/{{ item.path }}"
       loop:
-        - main.yml
-        - install.yml
-        - configure.yml
-        - deploy_custom_configs.yml
+        - path: roles/bind9/tasks/main.yml
+          label: BIND9 role task file 'main.yml'
+        - path: roles/dnscrypt_proxy/tasks/main.yml
+          label: DNSCrypt role task file 'main.yml'
       register: role_files
 
     - name: Confirm all role files exist
       ansible.builtin.assert:
         that:
           - item.stat.exists
-        success_msg: "✓ Role task file '{{ item.item }}' verified"
-        fail_msg: "✗ Role task file '{{ item.item }}' not found"
+        success_msg: "✓ {{ item.item.label }} verified"
+        fail_msg: "✗ {{ item.item.label }} not found"
       loop: "{{ role_files.results }}"
 
 - name: Test BIND9 deployment to remote host
@@ -47,8 +47,8 @@
       ansible.builtin.apt:
         name:
           - bind9
-          - bind9utils
-          - bind9-doc
+          - bind9-utils
+          - dnsutils
         state: present
         update_cache: yes
       check_mode: yes
@@ -60,5 +60,5 @@
 
     - name: Final success message
       ansible.builtin.debug:
-        msg: "✓✓✓ ansible-bind9 collection is properly integrated and ready for deployment ✓✓✓"
+        msg: "✓✓✓ infra.dns collection is properly integrated and ready for deployment ✓✓✓"
       run_once: yes

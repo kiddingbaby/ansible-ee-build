@@ -1,22 +1,43 @@
-# kiddingbaby.bind9
+# infra.dns
 
-生产就绪的 BIND9 Ansible Collection
+`infra.dns` 是当前 `ansible-ee-build` 内置的本地 collection，提供：
+
+- `infra.dns.bind9`
+- `infra.dns.dnscrypt_proxy`
+
+它被 `ansible-dns` 和 `ansible-services` 镜像直接打包进执行环境。
 
 ## 使用方法
 
-1. 将现有的 `/etc/bind/` 配置文件放置在 `roles/bind9/files/custom/`
-
-2. 在 `tests/inventory.yml` 中更新 DNS 服务器 IP
-
-3. 部署：
+仅部署 BIND9：
 
 ```bash
-ansible-playbook -i tests/inventory.yml playbooks/deploy.yml
+ansible-playbook -i inventory/hosts.yml ansible_collections/infra/dns/playbooks/deploy_bind9.yml
+```
+
+仅部署 DNSCrypt Proxy：
+
+```bash
+ansible-playbook -i inventory/hosts.yml ansible_collections/infra/dns/playbooks/deploy_dnscrypt_proxy.yml
+```
+
+如果你在本仓内验证 collection 集成，优先使用：
+
+```bash
+cd images/dns/tests/smoke-test
+docker compose up -d
+docker run --rm \
+  --network smoke-test_test-network \
+  -v "$PWD/project:/runner/project:Z" \
+  -v "$PWD/inventory:/runner/inventory:Z" \
+  ghcr.io/kiddingbaby/ansible-dns:dev \
+  ansible-runner run /runner -p test-without-systemd.yml
 ```
 
 ## 结构
 
-- `roles/bind9/tasks/install.yml` - 安装系统 bind9 包
-- `roles/bind9/tasks/configure.yml` - 启动并启用 bind9 服务
-- `roles/bind9/tasks/deploy_custom_configs.yml` - 部署自定义配置并重载 bind9
-- `roles/bind9/files/custom/` - 你现有的 /etc/bind/ 文件
+- `playbooks/deploy_bind9.yml` - 仅部署 BIND9
+- `playbooks/deploy_dnscrypt_proxy.yml` - 仅部署 DNSCrypt Proxy
+- `roles/bind9/tasks/main.yml` - 安装、模板渲染和服务启用
+- `roles/dnscrypt_proxy/tasks/main.yml` - 安装、模板渲染和服务启用
+- `roles/*/defaults/main.yml` - role 默认变量
